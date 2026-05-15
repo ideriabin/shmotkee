@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.svelte-kit
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.log
+coverage
+# Visual validation artifacts
+m*-*.png
+d*-*.png
+debug-*.png
+.playwright-mcp/

@@ -1,0 +1,21 @@
+{
+  "name": "Тиндер для шмоток",
+  "short_name": "Тиндер",
+  "description": "Локальный конструктор образов из своего гардероба.",
+  "lang": "ru",
+  "dir": "ltr",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#171012",
+  "theme_color": "#171012",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

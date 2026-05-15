@@ -1,0 +1,55 @@
+import { db } from './schema';
+import type { Session } from '../shared/types';
+import { DEFAULT_SLOT_RANGES } from '../shared/slots';
+
+function uid(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+export async function listSessions(): Promise<Session[]> {
+  return db.sessions.orderBy('updatedAt').reverse().toArray();
+}
+
+export async function getSession(id: string): Promise<Session | undefined> {
+  return db.sessions.get(id);
+}
+
+export async function createSession(name: string): Promise<Session> {
+  const now = Date.now();
+  const s: Session = {
+    id: uid(),
+    name: name.trim() || 'Без названия',
+    slotRanges: { ...DEFAULT_SLOT_RANGES },
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.sessions.add(s);
+  return s;
+}
+
+export async function renameSession(id: string, name: string): Promise<void> {
+  await db.sessions.update(id, { name: name.trim() || 'Без названия', updatedAt: Date.now() });
+}
+
+export async function updateSessionRanges(
+  id: string,
+  slotRanges: Session['slotRanges'],
+): Promise<void> {
+  await db.sessions.update(id, { slotRanges, updatedAt: Date.now() });
+}
+
+export async function touchSession(id: string): Promise<void> {
+  await db.sessions.update(id, { updatedAt: Date.now() });
+}
+
+export async function deleteSession(id: string): Promise<void> {
+  await db.transaction('rw', db.sessions, db.savedOutfits, async () => {
+    await db.savedOutfits.where('sessionId').equals(id).delete();
+    await db.sessions.delete(id);
+  });
+}
+
+export async function countOutfitsInSession(id: string): Promise<number> {
+  return db.savedOutfits.where('sessionId').equals(id).count();
+}

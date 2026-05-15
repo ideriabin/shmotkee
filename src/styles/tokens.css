@@ -1,0 +1,121 @@
+/*
+ * Design tokens for Тиндер для шмоток.
+ *
+ * Color: OKLCH only. Neutrals are tinted toward the brand hue (h≈18, near-burgundy),
+ * chroma drops as lightness moves toward extremes. The single accent earns rarity.
+ *
+ * Spacing: 4pt base with t-shirt sized semantics.
+ *
+ * Type: two families. Yeseva One for theatrical moments (wordmark, primary CTA,
+ * the хуйня/заебись pair). Onest for everything else. Both have native Cyrillic.
+ */
+
+:root {
+  /* ─── color: surfaces ─────────────────────────────────────────────── */
+  --bg:           oklch(0.135 0.006 18);
+  --surface:     oklch(0.180 0.006 18);
+  --surface-2:   oklch(0.225 0.007 18);
+  --surface-3:   oklch(0.275 0.008 18);
+
+  /* ─── color: text ─────────────────────────────────────────────────── */
+  --text:        oklch(0.965 0.005 30);
+  --text-soft:   oklch(0.800 0.005 30);
+  --text-muted:  oklch(0.580 0.006 30);
+  --text-faint:  oklch(0.420 0.005 30);
+
+  /* ─── color: lines ────────────────────────────────────────────────── */
+  --border:      oklch(0.305 0.006 18);
+  --border-soft: oklch(0.230 0.006 18);
+
+  /* ─── color: accent (the single one) ──────────────────────────────── */
+  --accent:        oklch(0.555 0.180 18);
+  --accent-hover:  oklch(0.620 0.195 18);
+  --accent-press:  oklch(0.490 0.170 18);
+  --accent-on:     oklch(0.985 0.003 18);
+  --accent-tint:   oklch(0.555 0.180 18 / 0.12);
+
+  /* ─── color: semantic ─────────────────────────────────────────────── */
+  --danger:        oklch(0.555 0.180 18);  /* same as accent — red is red */
+  --success-faint: oklch(0.700 0.020 145); /* used sparingly, only for toasts */
+
+  /* ─── color: shadow (used very sparingly) ─────────────────────────── */
+  --shadow-color: 18 6% 4%;
+  --shadow-elev-1: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+  --shadow-elev-2: 0 8px 24px hsl(var(--shadow-color) / 0.5);
+  --shadow-elev-3: 0 24px 64px hsl(var(--shadow-color) / 0.6);
+
+  /* ─── space (4pt) ─────────────────────────────────────────────────── */
+  --space-3xs:  4px;
+  --space-2xs:  8px;
+  --space-xs:  12px;
+  --space-sm:  16px;
+  --space-md:  24px;
+  --space-lg:  32px;
+  --space-xl:  48px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+
+  /* ─── radii (sharp — capped at 2px globally) ──────────────────────── */
+  --radius-1: 1px;
+  --radius-2: 2px;
+  --radius-pill: 999px; /* reserved for chips only */
+
+  /* ─── type: families ──────────────────────────────────────────────── */
+  --font-display: 'Yeseva One', 'Times New Roman', serif;
+  --font-ui:      'Onest', system-ui, -apple-system, sans-serif;
+
+  /* ─── type: scale (fixed rem — app UI, not marketing) ─────────────── */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.8125rem; /* 13px */
+  --text-md:   0.9375rem; /* 15px */
+  --text-lg:   1.0625rem; /* 17px — body */
+  --text-xl:   1.3125rem; /* 21px */
+  --text-2xl:  1.6875rem; /* 27px */
+  --text-3xl:  2.375rem;  /* 38px */
+  --text-4xl:  3.75rem;   /* 60px — hero only */
+
+  /* ─── type: weight ────────────────────────────────────────────────── */
+  --w-light:    300;
+  --w-regular:  400;
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* ─── type: line height ───────────────────────────────────────────── */
+  --lh-tight:  1.1;
+  --lh-snug:   1.25;
+  --lh-normal: 1.5;
+  --lh-loose:  1.7;
+
+  /* ─── type: tracking ──────────────────────────────────────────────── */
+  --track-tight: -0.02em;
+  --track-snug:  -0.01em;
+  --track-normal: 0;
+  --track-wide:  0.04em;
+  --track-caps:  0.08em;
+
+  /* ─── motion ──────────────────────────────────────────────────────── */
+  --ease-out:        cubic-bezier(0.22, 1, 0.36, 1);  /* ease-out-quart */
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-quick:       140ms;
+  --dur-base:        220ms;
+  --dur-medium:      320ms;
+  --dur-slow:        480ms;
+
+  /* ─── layout ──────────────────────────────────────────────────────── */
+  --nav-height-mobile: 64px;
+  --nav-width-desktop: 240px;
+  --content-max:       1400px;
+  --safe-bottom:       env(safe-area-inset-bottom, 0px);
+  --safe-top:          env(safe-area-inset-top, 0px);
+}
+
+/* Reduced motion: collapse durations, kill drag animations. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-quick:  60ms;
+    --dur-base:   80ms;
+    --dur-medium: 80ms;
+    --dur-slow:   80ms;
+  }
+}
