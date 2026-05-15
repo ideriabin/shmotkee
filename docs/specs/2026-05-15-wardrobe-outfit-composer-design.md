@@ -298,6 +298,47 @@ When an item is deleted from the library:
   - Otherwise, save the shortened outfit (it stays in the session, just with one fewer item — fine since sessions are throwaway and she's likely to re-export anyway).
 - If `N > 0` referencing outfits exist, show confirmation: *"Удалить вещь? Она используется в N образах."* Otherwise delete silently.
 
+## Visual direction
+
+The app must feel native to the end user's personal aesthetic — confident, dark, sharp. Reference: her Instagram grid (predominantly all-black wardrobe, burgundy hair as warmth accent, editorial photography, Cyrillic italic overlays). Anything pastel, soft-rounded, or "cute" is wrong.
+
+**Core principles:**
+
+- **Photos are the heroes.** App chrome — borders, dividers, button frames — recedes. The clothing images carry the visual weight on every screen.
+- **Dark mode only.** No light mode toggle in v1.
+- **One accent.** A single saturated red/burgundy used sparingly for action affordances: primary buttons, selected state, the `заебись` save action.
+- **Typography pulls weight.** A Cyrillic display serif (italic) for hero moments — session titles, the Tinder save/skip labels, generation CTA. A clean geometric sans for everything else (UI labels, body, captions). Both must have proper Cyrillic glyphs.
+- **Sharp corners.** Radius scale capped at 2px. No squircles, no pills.
+- **Generous negative space.** Library and Compose grids breathe; tiles don't crowd.
+
+**Token starting points** (refined during craft pass):
+
+| Token            | Value                          |
+| ---------------- | ------------------------------ |
+| `--bg`           | `#0A0A0B`                      |
+| `--surface`      | `#141416`                      |
+| `--surface-2`    | `#1C1C1F`                      |
+| `--text`         | `#F2F2F2`                      |
+| `--text-muted`   | `#7A7A80`                      |
+| `--border`       | `#2A2A2E`                      |
+| `--accent`       | `#C81E3A` (burgundy red)       |
+| `--accent-text`  | `#FFFFFF`                      |
+| `--display-font` | TBD — Cyrillic italic display  |
+| `--ui-font`      | Inter / similar geometric sans |
+
+**Hero typographic moments:**
+
+- The `заебись` button label in display italic, oversized; `хуйня` in a quieter weight to signal asymmetric energy (saving is the meaningful action).
+- Session names rendered in display italic in the Sessions tab header.
+- The "Сгенерировать" CTA in display italic, large.
+
+**Photography treatment:**
+
+- Library tiles: dark surface with the item image centered, no borders, ~4% inner padding for breathing room.
+- Outfit previews: items composed on dark surface, slight item drop-shadow (~12px blur, low opacity) to lift them off the bg without ringing them.
+
+**Polish pass:** the design will be iterated via the `impeccable` skill (see [Implementation approach](#implementation-approach)) and the result validated visually in a real browser session via Playwright before any feature is considered done.
+
 ## Tech stack
 
 | Concern         | Choice                                          | Why                                                         |
@@ -373,7 +414,16 @@ vite.config.ts
 - **Generator unit tests** (vitest): given a fixture library and slot ranges, verify combinations satisfy all constraints, locked items always present, dedupe works, edge cases (empty pool, all locked, min > pool size).
 - **Render geometry tests**: small set of fixture outfits → assert DOM positions match Canvas positions within 1px tolerance.
 - **DB integration tests**: fake-indexeddb in jsdom, exercise CRUD + cascade-delete.
-- **No E2E in v1** — manual testing on her devices.
+- **Visual validation via Playwright (MCP-driven, not in CI for v1):** after each feature lands, spin up dev server, drive a real browser via the Playwright MCP, take screenshots at mobile (390×844), tablet (820×1180), and desktop (1440×900) breakpoints. Eyeball against the visual direction. Fixture-load a sample library so previews aren't empty. This is part of the build loop, not a regression suite — formal E2E tests are deferred to v2.
+
+## Implementation approach
+
+The visual craft is delegated to the `impeccable` skill, which will:
+1. Establish project design rules grounded in [Visual direction](#visual-direction).
+2. Build each screen (Library, Compose, Tinder, Sessions) with high fidelity.
+3. Iterate via the polish/critique passes (`impeccable polish`, `impeccable critique`) before moving to the next screen.
+
+After each screen ships, Playwright (via MCP) renders it at the three breakpoints and the result is reviewed against the spec before unlocking the next screen's work.
 
 ## Risks & mitigations
 
