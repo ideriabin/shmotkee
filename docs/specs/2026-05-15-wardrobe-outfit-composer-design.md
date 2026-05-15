@@ -1,4 +1,6 @@
-# Wardrobe Outfit Composer — Design Spec
+# Тиндер для шмоток — Design Spec
+
+(Working title; internal codename: wardrobe outfit composer.)
 
 **Date:** 2026-05-15
 **Status:** Design approved, pending spec review
