@@ -1,7 +1,8 @@
 <script lang="ts">
   /*
-   * Cycles through system → light → dark → system. Shows the current
-   * mode's icon. Subtle button, lives in the nav-bar.
+   * Theme cycler — system → light → dark → system. Subtle icon-only
+   * button. Positioned by the parent (typically top-right corner of
+   * the app shell).
    */
   import { Sun, Moon, Monitor } from 'lucide-svelte';
   import { themeState, setTheme, type ThemeMode } from './theme.svelte';
@@ -31,43 +32,27 @@
   onclick={cycle}
 >
   {#if themeState.mode === 'system'}
-    <Monitor size={18} strokeWidth={1.6} aria-hidden="true" />
+    <Monitor size={16} strokeWidth={1.6} aria-hidden="true" />
   {:else if themeState.mode === 'light'}
-    <Sun size={18} strokeWidth={1.6} aria-hidden="true" />
+    <Sun size={16} strokeWidth={1.6} aria-hidden="true" />
   {:else}
-    <Moon size={18} strokeWidth={1.6} aria-hidden="true" />
+    <Moon size={16} strokeWidth={1.6} aria-hidden="true" />
   {/if}
-  <span class="switch-label">
-    {themeState.mode === 'system' ? 'Авто' : themeState.mode === 'light' ? 'Свет' : 'Тьма'}
-  </span>
 </button>
 
 <style>
   .switch {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2xs);
-    padding: var(--space-3xs) var(--space-2xs);
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
     color: var(--text-muted);
-    border-radius: var(--radius-2);
+    border-radius: 50%;
     transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
-  .switch:hover {
+  .switch:hover, .switch:active {
     color: var(--text);
     background: var(--surface);
-  }
-
-  .switch-label {
-    font-size: var(--text-xs);
-    letter-spacing: var(--track-caps);
-    text-transform: uppercase;
-    font-weight: var(--w-medium);
-    display: none;
-  }
-
-  @media (min-width: 900px) {
-    .switch-label {
-      display: inline;
-    }
   }
 </style>

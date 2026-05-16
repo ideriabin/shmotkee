@@ -512,22 +512,24 @@
   .drop-strip {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3xs);
+    gap: var(--space-2xs);
   }
   .drop-chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-3xs);
-    padding: var(--space-2xs) var(--space-xs);
+    gap: var(--space-2xs);
+    padding: var(--space-xs) var(--space-sm);
+    min-height: 44px;
     background: var(--accent-tint);
     border: 1px solid var(--accent);
     color: var(--text);
     border-radius: var(--radius-pill);
-    font-size: var(--text-sm);
+    font-size: var(--text-md);
     font-weight: var(--w-medium);
     transition: background var(--dur-quick) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
-  .drop-chip:hover {
+  .drop-chip:hover, .drop-chip:active {
     background: var(--accent);
     color: var(--accent-on);
   }
@@ -572,6 +574,15 @@
     transition: filter var(--dur-quick) var(--ease-out), outline var(--dur-quick) var(--ease-out);
     outline: 2px solid transparent;
     outline-offset: -2px;
+  }
+  /* Prevent iOS Safari's native "long-press to save/copy/preview"
+     gesture on the photo — we want long-press to enter selection mode,
+     not show a system menu. */
+  .tile-photo :global(img) {
+    pointer-events: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .tile.selected .tile-photo {
     outline-color: var(--accent);

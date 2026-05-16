@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Shirt, Sparkles, BookmarkCheck } from 'lucide-svelte';
   import { appState, setTab, type Tab } from './routes.svelte';
-  import ThemeSwitcher from './theme-switcher.svelte';
 
   type NavItem = {
     id: Tab;
@@ -18,8 +17,7 @@
 
 <nav class="nav" aria-label="Главная навигация">
   <a class="wordmark" href="#" tabindex="-1" aria-hidden="true">
-    <span class="wordmark-strong">тиндер</span>
-    <span class="wordmark-soft">для шмоток</span>
+    <span class="wordmark-strong">Shmotkee</span>
   </a>
 
   <ul class="tabs">
@@ -38,10 +36,6 @@
       </li>
     {/each}
   </ul>
-
-  <div class="theme-slot">
-    <ThemeSwitcher />
-  </div>
 </nav>
 
 <style>
@@ -49,18 +43,12 @@
     --nav-pad: var(--space-sm);
     background: var(--bg);
     border-top: 1px solid var(--border-soft);
-    padding: var(--space-2xs) var(--nav-pad) calc(var(--space-2xs) + var(--safe-bottom));
+    padding: 0 var(--nav-pad);
+    padding-bottom: max(var(--space-3xs), var(--safe-bottom));
     display: flex;
     align-items: center;
     gap: var(--space-md);
     z-index: 50;
-  }
-
-  .theme-slot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
   }
 
   .wordmark {
@@ -72,17 +60,9 @@
   .wordmark-strong {
     display: block;
     font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-size: var(--text-3xl);
     color: var(--text);
     letter-spacing: var(--track-tight);
-  }
-  .wordmark-soft {
-    display: block;
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    color: var(--text-muted);
-    letter-spacing: var(--track-tight);
-    margin-top: 2px;
   }
 
   .tabs {
@@ -97,10 +77,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-3xs);
+    gap: 2px;
     padding: var(--space-2xs) var(--space-3xs);
     color: var(--text-muted);
-    min-height: 56px;
+    min-height: 48px;
     border-radius: var(--radius-1);
     transition: color var(--dur-quick) var(--ease-out);
     position: relative;
@@ -140,10 +120,6 @@
     }
     .wordmark {
       display: block;
-    }
-    .theme-slot {
-      margin-top: auto;
-      justify-content: flex-start;
     }
     .tabs {
       display: flex;

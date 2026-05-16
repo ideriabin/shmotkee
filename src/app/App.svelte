@@ -2,6 +2,7 @@
   import { appState } from './routes.svelte';
   import NavBar from './nav-bar.svelte';
   import IosInstallTip from './ios-install-tip.svelte';
+  import ThemeSwitcher from './theme-switcher.svelte';
   import Library from '../library/library.svelte';
   import Compose from '../compose/compose.svelte';
   import Sessions from '../sessions/sessions.svelte';
@@ -31,6 +32,9 @@
   </main>
   <NavBar />
   <IosInstallTip />
+  <div class="theme-corner">
+    <ThemeSwitcher />
+  </div>
 </div>
 
 <style>
@@ -39,6 +43,7 @@
     flex-direction: column;
     height: 100dvh;
     width: 100%;
+    position: relative;
   }
 
   .content {
@@ -49,12 +54,23 @@
     padding-top: var(--safe-top);
   }
 
+  .theme-corner {
+    position: fixed;
+    top: calc(var(--safe-top) + var(--space-2xs));
+    right: var(--space-2xs);
+    z-index: 70;
+  }
+
   @media (min-width: 900px) {
     .shell {
       flex-direction: row-reverse;
     }
     .content {
       padding-top: 0;
+    }
+    .theme-corner {
+      top: var(--space-md);
+      right: var(--space-md);
     }
   }
 </style>

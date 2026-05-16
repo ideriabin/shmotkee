@@ -110,6 +110,7 @@
     {#if current}
       <div
         class="card"
+        class:dragging
         class:leaving-left={leaving === 'left'}
         class:leaving-right={leaving === 'right'}
         class:entering
@@ -215,17 +216,20 @@
     transition: transform var(--dur-base) var(--ease-out);
     cursor: grab;
     will-change: transform;
+    touch-action: none;
   }
-  .card:active {
+  /* While the finger is down, kill the transition so the card tracks
+     1:1 with movement (no easing = no shake). On release we re-enable
+     the transition and either snap back or fly off-screen. */
+  .card.dragging {
+    transition: none;
     cursor: grabbing;
   }
   .card.leaving-left {
     transform: translateX(-130%) rotate(-15deg);
-    transition: transform var(--dur-base) var(--ease-out);
   }
   .card.leaving-right {
     transform: translateX(130%) rotate(15deg);
-    transition: transform var(--dur-base) var(--ease-out);
   }
   .card.entering {
     transform: translateY(8px) scale(0.985);

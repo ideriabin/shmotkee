@@ -33,6 +33,10 @@ img,
 svg {
   display: block;
   max-width: 100%;
+  /* Disable iOS Safari long-press image preview/save menu app-wide.
+     The app has its own long-press semantics (selection mode, etc). */
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
 }
 
 button {

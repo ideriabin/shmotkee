@@ -220,6 +220,10 @@
     place-items: center;
     box-shadow: var(--shadow-elev-2);
   }
+  .card :global(img) {
+    pointer-events: none;
+    -webkit-touch-callout: none;
+  }
   .card-name {
     font-family: var(--font-display);
     font-size: var(--text-xl);
