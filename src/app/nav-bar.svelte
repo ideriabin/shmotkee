@@ -44,7 +44,12 @@
     background: var(--bg);
     border-top: 1px solid var(--border-soft);
     padding: 0 var(--nav-pad);
-    padding-bottom: max(var(--space-3xs), var(--safe-bottom));
+    /* iOS reports ~34px for the home-indicator safe area, which is more
+       visual clearance than the OS actually needs. Subtract a chunk so
+       tabs sit just above the indicator line, not floating high above
+       it. On devices without an indicator (Mac, iPad), the max() clamp
+       gives a sensible minimum. */
+    padding-bottom: max(var(--space-3xs), calc(var(--safe-bottom) - 18px));
     display: flex;
     align-items: center;
     gap: var(--space-md);
@@ -78,9 +83,9 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    padding: var(--space-2xs) var(--space-3xs);
+    padding: var(--space-3xs) var(--space-3xs);
     color: var(--text-muted);
-    min-height: 48px;
+    min-height: 44px;
     border-radius: var(--radius-1);
     transition: color var(--dur-quick) var(--ease-out);
     position: relative;
