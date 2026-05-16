@@ -8,18 +8,28 @@ const app = mount(App, {
 });
 
 // Fade out the inline splash once the app has mounted AND a minimum
-// display time has elapsed — so cold-start launches always show the
-// brand moment for at least ~350ms, not a fast flicker.
+// display time has elapsed — so the brand moment is always visible
+// for at least ~700ms before transitioning. The fade itself is a
+// 380ms zoom-out so the splash doesn't snap, it lifts away.
 const splash = document.getElementById('splash');
 if (splash) {
-  const minDisplayMs = 350;
+  const minDisplayMs = 700;
+  const fadeDurationMs = 420;
   const startedAt = Number(splash.dataset.startedAt) || Date.now();
   const remaining = Math.max(0, minDisplayMs - (Date.now() - startedAt));
   setTimeout(() => {
     splash.classList.add('fade');
-    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
-    // Safety: remove after a generous timeout even if transitionend never fires.
-    setTimeout(() => splash.remove(), 1500);
+    // Remove after the fade has played; rely on transitionend, with a
+    // longer safety timeout in case the event fires unreliably (it
+    // sometimes doesn't in iOS PWA standalone mode).
+    let removed = false;
+    const finalize = () => {
+      if (removed) return;
+      removed = true;
+      splash.remove();
+    };
+    splash.addEventListener('transitionend', finalize, { once: true });
+    setTimeout(finalize, fadeDurationMs + 200);
   }, remaining);
 }
 
