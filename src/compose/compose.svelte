@@ -357,8 +357,14 @@
     display: flex;
     gap: var(--space-2xs);
     overflow-x: auto;
+    overflow-y: hidden;
     padding: var(--space-3xs);
-    margin: 0 -var(--space-3xs);
+    margin: 0 calc(-1 * var(--space-3xs));
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lock-strip::-webkit-scrollbar {
+    display: none;
   }
   .lock-tile {
     width: 84px;
@@ -411,10 +417,16 @@
     color: var(--accent-on);
     padding: var(--space-md) var(--space-md);
     border-radius: var(--radius-2);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .cta:hover {
-    background: var(--accent-hover);
+  @media (hover: hover) {
+    .cta:hover {
+      background: var(--accent-hover);
+    }
+  }
+  .cta:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 60ms;
   }
   .cta:disabled {
     background: var(--surface-2);
@@ -460,8 +472,14 @@
     overflow: hidden;
     transition: transform var(--dur-quick) var(--ease-out);
   }
-  .result:hover {
-    transform: translateY(-2px);
+  @media (hover: hover) {
+    .result:hover {
+      transform: translateY(-2px);
+    }
+  }
+  .result:active {
+    transform: scale(0.97);
+    transition-duration: 60ms;
   }
 
   .more {

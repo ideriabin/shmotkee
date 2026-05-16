@@ -18,13 +18,15 @@
 
 <div class="shell">
   <main class="content">
-    {#if appState.tab === 'library'}
+    <div class="tab-page" class:active={appState.tab === 'library'} aria-hidden={appState.tab !== 'library'}>
       <Library />
-    {:else if appState.tab === 'compose'}
+    </div>
+    <div class="tab-page" class:active={appState.tab === 'compose'} aria-hidden={appState.tab !== 'compose'}>
       <Compose />
-    {:else}
+    </div>
+    <div class="tab-page" class:active={appState.tab === 'sessions'} aria-hidden={appState.tab !== 'sessions'}>
       <Sessions />
-    {/if}
+    </div>
   </main>
   <NavBar />
   <IosInstallTip />
@@ -39,19 +41,37 @@
     position: relative;
   }
 
+  /* All three tab pages live in a single positioned wrapper so we can
+     crossfade between them without losing scroll position or
+     remounting state. Each page is its own scroll container; switching
+     tabs swaps which one is visible & receiving pointer events. */
   .content {
     flex: 1;
     min-height: 0;
+    position: relative;
+  }
+  .tab-page {
+    position: absolute;
+    inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding-top: var(--safe-top);
+    overscroll-behavior-y: contain;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-base) var(--ease-out);
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-page.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   @media (min-width: 900px) {
     .shell {
       flex-direction: row-reverse;
     }
-    .content {
+    .tab-page {
       padding-top: 0;
     }
   }

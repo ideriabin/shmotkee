@@ -27,6 +27,7 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 img,
@@ -47,6 +48,7 @@ button {
   padding: 0;
   cursor: pointer;
   text-align: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 input,

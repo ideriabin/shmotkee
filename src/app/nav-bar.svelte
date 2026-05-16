@@ -89,7 +89,7 @@
     color: var(--text-muted);
     min-height: 44px;
     border-radius: var(--radius-1);
-    transition: color var(--dur-quick) var(--ease-out);
+    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
     position: relative;
   }
   /* Fixed-size icon container — lucide glyphs vary in width within
@@ -101,8 +101,14 @@
     width: 24px;
     height: 24px;
   }
-  .tab:hover {
-    color: var(--text-soft);
+  @media (hover: hover) {
+    .tab:hover {
+      color: var(--text-soft);
+    }
+  }
+  .tab:active {
+    transform: scale(0.94);
+    transition-duration: 60ms;
   }
   .tab.active {
     color: var(--text);

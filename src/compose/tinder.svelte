@@ -54,6 +54,7 @@
   async function decide(keep: boolean) {
     if (!current) return;
     leaving = keep ? 'right' : 'left';
+    if (navigator.vibrate) navigator.vibrate(keep ? [12, 30, 12] : 8);
     if (keep && composeState.session) {
       await saveOutfit(composeState.session.id, current);
     }
@@ -160,6 +161,14 @@
     flex-direction: column;
     z-index: 300;
     padding: var(--safe-top) 0 var(--safe-bottom);
+    animation: tinder-in var(--dur-medium) var(--ease-out-expo);
+  }
+  @keyframes tinder-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tinder { animation: none; }
   }
 
   .top {
@@ -307,21 +316,35 @@
   }
   .action {
     padding: var(--space-md) var(--space-sm);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
     background: var(--bg);
     color: var(--text);
   }
   .action.nope {
     color: var(--text-muted);
   }
-  .action.nope:hover {
-    background: var(--surface);
-    color: var(--text);
-  }
   .action.yes {
     color: var(--accent);
   }
-  .action.yes:hover {
+  @media (hover: hover) {
+    .action.nope:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+    .action.yes:hover {
+      background: var(--accent);
+      color: var(--accent-on);
+    }
+  }
+  .action:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 60ms;
+  }
+  .action.nope:active:not(:disabled) {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .action.yes:active:not(:disabled) {
     background: var(--accent);
     color: var(--accent-on);
   }

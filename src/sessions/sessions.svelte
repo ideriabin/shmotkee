@@ -138,7 +138,9 @@
   .session-row {
     width: 100%;
     text-align: left;
-    padding: var(--space-md) 0;
+    padding: var(--space-md);
+    margin: 0 calc(-1 * var(--space-md));
+    width: calc(100% + 2 * var(--space-md));
     border-bottom: 1px solid var(--border-soft);
     display: flex;
     justify-content: space-between;
@@ -146,8 +148,14 @@
     gap: var(--space-md);
     transition: background var(--dur-quick) var(--ease-out);
   }
-  .session-row:hover {
-    background: var(--surface);
+  @media (hover: hover) {
+    .session-row:hover {
+      background: var(--surface);
+    }
+  }
+  .session-row:active {
+    background: var(--surface-2);
+    transition-duration: 60ms;
   }
   .session-name {
     font-size: var(--text-2xl);
