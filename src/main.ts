@@ -1,9 +1,6 @@
 import { mount } from 'svelte';
 import './styles/tokens.css';
 import './styles/global.css';
-// Side-effect import: applies the saved theme synchronously before mount,
-// preventing FOUC.
-import './app/theme.svelte';
 import App from './app/App.svelte';
 
 const app = mount(App, {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { registerSW } from 'virtual:pwa-register';
   import { appState } from './routes.svelte';
   import NavBar from './nav-bar.svelte';
   import IosInstallTip from './ios-install-tip.svelte';
@@ -6,32 +7,12 @@
   import Compose from '../compose/compose.svelte';
   import Sessions from '../sessions/sessions.svelte';
 
-  // Register the service worker once on app start. In dev (no production
-  // build), we silently skip — vite serves /sw.js but registering during
-  // HMR is noisy and unnecessary. In prod the worker lives under the
-  // configured base path (`/shmotkee/sw.js` on GitHub Pages).
-  //
-  // updateViaCache: 'none' guarantees the browser always checks the
-  // network for sw.js itself (the SW file is never stale-cached). And
-  // when the new SW takes over (becomes the active controller), we
-  // reload the page so the freshly-fetched HTML/assets render.
+  // vite-plugin-pwa wires up registration, autoUpdate, and cache cleanup.
+  // `immediate: true` reloads as soon as a new SW activates so the user
+  // never lands on stale HTML pointing at dead hashed assets.
   $effect(() => {
-    if (!('serviceWorker' in navigator) || !import.meta.env.PROD) return;
-    navigator.serviceWorker
-      .register(`${import.meta.env.BASE_URL}sw.js`, {
-        scope: import.meta.env.BASE_URL,
-        updateViaCache: 'none',
-      })
-      .catch(() => {});
-
-    let refreshing = false;
-    const onControllerChange = () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    };
-    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+    if (!import.meta.env.PROD) return;
+    registerSW({ immediate: true });
   });
 </script>
 

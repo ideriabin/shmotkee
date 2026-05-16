@@ -116,44 +116,11 @@
   --safe-top:          env(safe-area-inset-top, 0px);
 }
 
-/* ─── light theme ─── overrides applied when the user picks "light"
-   explicitly, OR when the system prefers light and no explicit choice
-   has been made. */
-
-:root[data-theme="light"] {
-  --bg:           oklch(0.970 0.008 60);
-  --surface:      oklch(1.000 0 0);
-  --surface-2:    oklch(0.945 0.010 60);
-  --surface-3:    oklch(0.905 0.011 60);
-
-  --text:         oklch(0.185 0.012 18);
-  --text-soft:    oklch(0.330 0.010 18);
-  --text-muted:   oklch(0.510 0.010 18);
-  --text-faint:   oklch(0.700 0.008 18);
-
-  --border:       oklch(0.835 0.010 60);
-  --border-soft:  oklch(0.910 0.008 60);
-
-  --accent:        oklch(0.490 0.180 18);
-  --accent-hover:  oklch(0.435 0.170 18);
-  --accent-press:  oklch(0.555 0.180 18);
-  --accent-on:     oklch(0.995 0.003 60);
-  --accent-tint:   oklch(0.490 0.180 18 / 0.10);
-
-  --tile:          oklch(0.925 0.010 60);
-  --tile-ink:      oklch(0.185 0.010 18);
-  --tile-shadow:   oklch(0 0 0 / 0.20);
-
-  --scrim:         oklch(0.185 0.010 18 / 0.55);
-  --scrim-strong:  oklch(0.185 0.010 18 / 0.78);
-
-  --shadow-elev-1: 0 1px 2px oklch(0.20 0.010 18 / 0.12);
-  --shadow-elev-2: 0 8px 24px oklch(0.20 0.010 18 / 0.16);
-  --shadow-elev-3: 0 24px 64px oklch(0.20 0.010 18 / 0.20);
-}
+/* ─── light theme ─── automatically applied when the system prefers
+   light. No user-facing switcher; we trust the OS-level setting. */
 
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+  :root {
     --bg:           oklch(0.970 0.008 60);
     --surface:      oklch(1.000 0 0);
     --surface-2:    oklch(0.945 0.010 60);
