@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronLeft, Download, Trash2, X } from 'lucide-svelte';
+  import { ChevronLeft, Download, Trash2, X, Sparkles } from 'lucide-svelte';
   import { liveQuery } from 'dexie';
   import { db } from '../db/schema';
   import type { Session, SavedOutfit, Item, Combination } from '../shared/types';
@@ -10,6 +10,8 @@
   import { renderOutfitToPng } from '../export/canvas-renderer';
   import { downloadBlob, downloadAsZip } from '../export/download';
   import { slugify } from '../export/slug';
+  import { setActiveSession, setTab } from '../app/routes.svelte';
+  import { composeState, resetGeneration } from '../compose/compose-state.svelte';
   import Preview from '../compose/preview.svelte';
 
   let {
@@ -128,6 +130,22 @@
     await deleteSession(session.id);
     onDeleted();
   }
+
+  /**
+   * Make this session the active one and jump to the Compose tab.
+   * Clears any in-memory generator state so the new session starts
+   * fresh — slot ranges and locked items reset on first render of
+   * Compose to the persisted session values.
+   */
+  function resumeWork() {
+    setActiveSession(session.id);
+    composeState.session = session;
+    composeState.lockedItems = [];
+    composeState.tinderIndex = 0;
+    composeState.tinderOpen = false;
+    resetGeneration();
+    setTab('compose');
+  }
 </script>
 
 <section class="detail">
@@ -156,6 +174,11 @@
       <Trash2 size={20} strokeWidth={1.6} aria-hidden="true" />
     </button>
   </header>
+
+  <button class="resume" type="button" onclick={resumeWork}>
+    <Sparkles size={20} strokeWidth={1.6} aria-hidden="true" />
+    <span class="resume-label display">Собрать ещё</span>
+  </button>
 
   {#if outfits.length === 0}
     <div class="empty">
@@ -302,6 +325,28 @@
   }
   .icon-btn.destructive:hover {
     color: var(--accent);
+  }
+
+  .resume {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    width: 100%;
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--accent);
+    color: var(--accent-on);
+    border-radius: var(--radius-2);
+    transition: background var(--dur-quick) var(--ease-out);
+  }
+  .resume:hover, .resume:active {
+    background: var(--accent-hover);
+  }
+  .resume-label {
+    font-size: var(--text-xl);
+    line-height: 1;
+    letter-spacing: var(--track-tight);
   }
 
   .outfit-list {
