@@ -54,7 +54,7 @@
     };
     for (const id of o.itemIds) {
       const it = itemsById.get(id);
-      if (it) bySlot[it.slot].push(it);
+      if (it && it.slot !== null) bySlot[it.slot].push(it);
     }
     return { bySlot, key: o.id };
   }
@@ -412,7 +412,7 @@
   .modal {
     position: fixed;
     inset: 0;
-    background: oklch(0 0 0 / 0.7);
+    background: var(--scrim-strong);
     display: grid;
     place-items: center;
     padding: var(--space-md);

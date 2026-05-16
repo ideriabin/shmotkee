@@ -8,7 +8,7 @@
   let { item, onClose }: { item: Item; onClose: () => void } = $props();
 
   let name = $state(item.name);
-  let slot = $state<SlotKey>(item.slot);
+  let slot = $state<SlotKey | null>(item.slot);
   let zPriority = $state(item.zPriority);
   let confirmDelete = $state(false);
   let outfitsUsing = $state(0);
@@ -76,6 +76,14 @@
       <fieldset class="field">
         <legend class="label">Слот</legend>
         <div class="chips">
+          <button
+            type="button"
+            class="chip"
+            class:active={slot === null}
+            onclick={() => (slot = null)}
+          >
+            Без слота
+          </button>
           {#each SLOT_KEYS as key (key)}
             <button
               type="button"
@@ -136,7 +144,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: oklch(0 0 0 / 0.6);
+    background: var(--scrim);
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -182,11 +190,12 @@
   }
 
   .preview {
-    background: var(--bg);
+    background: var(--tile);
     border: 1px solid var(--border-soft);
     aspect-ratio: 4 / 5;
     padding: var(--space-md);
     margin-bottom: var(--space-md);
+    border-radius: var(--radius-2);
   }
 
   .form {
@@ -301,7 +310,7 @@
   .confirm {
     position: fixed;
     inset: 0;
-    background: oklch(0 0 0 / 0.7);
+    background: var(--scrim-strong);
     display: grid;
     place-items: center;
     z-index: 300;

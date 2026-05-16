@@ -3,7 +3,12 @@ import type { SlotKey, SlotRange } from './slots';
 export type Item = {
   id: string;
   name: string;
-  slot: SlotKey;
+  /**
+   * Slot the item lives in, or `null` when not yet classified.
+   * Unclassified items are skipped by the outfit generator and shown
+   * under the "Без слота" filter in the library.
+   */
+  slot: SlotKey | null;
   zPriority: number;
   blob: Blob;
   thumbnail: Blob;

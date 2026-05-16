@@ -1,6 +1,9 @@
 import { mount } from 'svelte';
 import './styles/tokens.css';
 import './styles/global.css';
+// Side-effect import: applies the saved theme synchronously before mount,
+// preventing FOUC.
+import './app/theme.svelte';
 import App from './app/App.svelte';
 
 const app = mount(App, {
@@ -62,7 +65,47 @@ if (import.meta.env.DEV) {
         zPriority: f.z ?? 0,
       });
     }
-    console.info('seeded', fixtures.length, 'items');
+    console.info('seeded', fixtures.length, 'classified items');
+  };
+
+  // Dump variant — all items unclassified, to test the triage flows.
+  (window as unknown as { __seedDump: () => Promise<void> }).__seedDump = async () => {
+    const { createItem } = await import('./db/items');
+    const { db } = await import('./db/schema');
+    await db.items.clear();
+    await db.savedOutfits.clear();
+    await db.sessions.clear();
+
+    const shapes: { name: string; shape: string; tint: string }[] = [
+      { name: 'белая майка', shape: 'tee', tint: '#F2EFEC' },
+      { name: 'чёрный лонгслив', shape: 'tee', tint: '#0E0B0C' },
+      { name: 'тёмно-зелёный гольф', shape: 'tee', tint: '#0F2C24' },
+      { name: 'кардиган чёрный', shape: 'cardigan', tint: '#161114' },
+      { name: 'кардиган серый', shape: 'cardigan', tint: '#3A3338' },
+      { name: 'кожаные брюки', shape: 'pants', tint: '#0A0708' },
+      { name: 'чёрный пинстрайп', shape: 'pants', tint: '#161217' },
+      { name: 'винил-низ', shape: 'pants', tint: '#1A0F12' },
+      { name: 'пальто длинное', shape: 'coat', tint: '#1B1416' },
+      { name: 'мех-куртка', shape: 'coat', tint: '#28201E' },
+      { name: 'платье-сетка', shape: 'dress', tint: '#0F0B0C' },
+      { name: 'красные туфли', shape: 'shoes', tint: '#8A1C2A' },
+      { name: 'чёрные ботинки', shape: 'shoes', tint: '#0B0809' },
+      { name: 'кеды белые', shape: 'shoes', tint: '#EDEAE6' },
+      { name: 'очки-кошки', shape: 'sunglasses', tint: '#0D0809' },
+      { name: 'сумка белая', shape: 'bag', tint: '#E9E5E1' },
+    ];
+
+    for (const f of shapes) {
+      const blob = await makeSyntheticBlob(f.shape, f.tint);
+      const thumb = await makeSyntheticBlob(f.shape, f.tint, 320);
+      await createItem({
+        name: f.name,
+        slot: null,
+        blob,
+        thumbnail: thumb,
+      });
+    }
+    console.info('dumped', shapes.length, 'unclassified items');
   };
 }
 

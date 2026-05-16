@@ -27,13 +27,19 @@ export type GenerateOpts = {
 export function* generate(opts: GenerateOpts): Generator<Combination> {
   const { library, locked, slotRanges, seenKeys } = opts;
 
-  // Group library by slot.
+  // Group library by slot. Unclassified items (slot === null) are silently
+  // excluded from generation.
   const bySlot: Record<SlotKey, Item[]> = emptyBySlot();
-  for (const item of library) bySlot[item.slot].push(item);
+  for (const item of library) {
+    if (item.slot !== null) bySlot[item.slot].push(item);
+  }
 
-  // Locked items by slot.
+  // Locked items by slot. (Unclassified items shouldn't be lockable; lock
+  // picker filters them out.)
   const lockedBySlot: Record<SlotKey, Item[]> = emptyBySlot();
-  for (const item of locked) lockedBySlot[item.slot].push(item);
+  for (const item of locked) {
+    if (item.slot !== null) lockedBySlot[item.slot].push(item);
+  }
 
   // Pool of unlocked items per slot.
   const lockedIds = new Set(locked.map((i) => i.id));

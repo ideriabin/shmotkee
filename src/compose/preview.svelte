@@ -35,12 +35,13 @@
     position: relative;
     width: 100%;
     aspect-ratio: 4 / 5;
-    background: var(--bg);
+    background: var(--tile);
     overflow: hidden;
     isolation: isolate;
+    border-radius: var(--radius-2);
   }
   .canvas.accent {
-    background: var(--surface);
+    background: var(--tile);
   }
   .slot {
     position: absolute;
@@ -52,6 +53,6 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 6px 16px oklch(0 0 0 / 0.45));
+    filter: drop-shadow(0 6px 16px var(--tile-shadow));
   }
 </style>

@@ -22,7 +22,7 @@ export async function getItem(id: string): Promise<Item | undefined> {
 
 export async function createItem(input: {
   name: string;
-  slot: SlotKey;
+  slot: SlotKey | null;
   blob: Blob;
   thumbnail: Blob;
   zPriority?: number;
@@ -50,6 +50,44 @@ export async function updateItem(
   patch: Partial<Pick<Item, 'name' | 'slot' | 'zPriority'>>,
 ): Promise<void> {
   await db.items.update(id, patch);
+}
+
+/**
+ * Move several items into the same slot at once. Used by the
+ * selection-mode batch move in the library.
+ */
+export async function updateItemSlots(
+  ids: string[],
+  slot: SlotKey | null,
+): Promise<void> {
+  await db.transaction('rw', db.items, async () => {
+    for (const id of ids) {
+      await db.items.update(id, { slot });
+    }
+  });
+}
+
+/**
+ * Capture the current slot per id so a batch move can be reverted.
+ */
+export async function snapshotSlots(ids: string[]): Promise<Map<string, SlotKey | null>> {
+  const map = new Map<string, SlotKey | null>();
+  for (const id of ids) {
+    const it = await db.items.get(id);
+    if (it) map.set(id, it.slot);
+  }
+  return map;
+}
+
+/**
+ * Revert each item to its previous slot.
+ */
+export async function restoreItemSlots(snapshot: Map<string, SlotKey | null>): Promise<void> {
+  await db.transaction('rw', db.items, async () => {
+    for (const [id, slot] of snapshot) {
+      await db.items.update(id, { slot });
+    }
+  });
 }
 
 /**

@@ -164,7 +164,7 @@
                   <X size={12} strokeWidth={2} aria-hidden="true" />
                 </button>
                 <p class="lock-name">{item.name}</p>
-                <p class="lock-slot">{SLOT_LABEL_RU[item.slot]}</p>
+                <p class="lock-slot">{item.slot ? SLOT_LABEL_RU[item.slot] : '—'}</p>
               </div>
             </li>
           {/each}
@@ -367,15 +367,16 @@
   .lock-photo {
     width: 84px;
     height: 84px;
-    background: var(--bg);
+    background: var(--tile);
     padding: 6%;
     margin-bottom: var(--space-3xs);
+    border-radius: var(--radius-2);
   }
   .lock-remove {
     position: absolute;
     top: 2px;
     right: 2px;
-    background: oklch(0 0 0 / 0.65);
+    background: var(--scrim);
     color: var(--text);
     width: 18px;
     height: 18px;

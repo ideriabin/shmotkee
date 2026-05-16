@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Shirt, Sparkles, BookmarkCheck } from 'lucide-svelte';
   import { appState, setTab, type Tab } from './routes.svelte';
+  import ThemeSwitcher from './theme-switcher.svelte';
 
   type NavItem = {
     id: Tab;
@@ -37,6 +38,10 @@
       </li>
     {/each}
   </ul>
+
+  <div class="theme-slot">
+    <ThemeSwitcher />
+  </div>
 </nav>
 
 <style>
@@ -49,6 +54,13 @@
     align-items: center;
     gap: var(--space-md);
     z-index: 50;
+  }
+
+  .theme-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   .wordmark {
@@ -128,6 +140,10 @@
     }
     .wordmark {
       display: block;
+    }
+    .theme-slot {
+      margin-top: auto;
+      justify-content: flex-start;
     }
     .tabs {
       display: flex;

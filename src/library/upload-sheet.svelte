@@ -1,16 +1,13 @@
 <script lang="ts">
   import { X, FolderOpen, FileImage } from 'lucide-svelte';
-  import { SLOT_KEYS, SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
-  import { plural, FILES } from '../shared/ru-plural';
   import { createItem } from '../db/items';
   import { generateThumbnail, filenameStem } from './thumbnail';
 
   let { onClose }: { onClose: () => void } = $props();
 
-  type Step = 'source' | 'slot' | 'importing' | 'done';
+  type Step = 'source' | 'importing' | 'done';
 
   let step = $state<Step>('source');
-  let chosenFiles = $state<File[]>([]);
   let totalCount = $state(0);
   let doneCount = $state(0);
   let failedCount = $state(0);
@@ -43,7 +40,7 @@
     folderInput?.click();
   }
 
-  function onFilesChosen(ev: Event) {
+  async function onFilesChosen(ev: Event) {
     const input = ev.currentTarget as HTMLInputElement;
     const list = input.files;
     if (!list || list.length === 0) return;
@@ -55,22 +52,21 @@
       lastError = 'Среди выбранных файлов нет картинок.';
       return;
     }
-    chosenFiles = images;
-    step = 'slot';
+    await importAll(images);
   }
 
-  async function importInto(slot: SlotKey) {
+  async function importAll(files: File[]) {
     step = 'importing';
-    totalCount = chosenFiles.length;
+    totalCount = files.length;
     doneCount = 0;
     failedCount = 0;
 
-    const tasks = chosenFiles.map(async (file) => {
+    const tasks = files.map(async (file) => {
       try {
         const thumb = await generateThumbnail(file);
         await createItem({
           name: filenameStem(file.name),
-          slot,
+          slot: null,
           blob: file,
           thumbnail: thumb,
         });
@@ -103,7 +99,7 @@
   <div class="sheet" role="document">
     <header class="sheet-head">
       <h2 id="upload-title" class="sheet-title">
-        {#if step === 'source'}Добавить{:else if step === 'slot'}Куда?{:else if step === 'importing'}Загружаю{:else}Готово{/if}
+        {#if step === 'source'}Добавить{:else if step === 'importing'}Загружаю{:else}Готово{/if}
       </h2>
       <button class="icon-btn" type="button" aria-label="Закрыть" onclick={close}>
         <X size={20} strokeWidth={1.6} aria-hidden="true" />
@@ -150,20 +146,6 @@
           onchange={onFilesChosen}
           style="display:none"
         />
-      {:else if step === 'slot'}
-        <p class="hint">
-          {chosenFiles.length} {plural(chosenFiles.length, FILES)} →
-          в какой слот?
-        </p>
-        <ul class="slot-list">
-          {#each SLOT_KEYS as slot (slot)}
-            <li>
-              <button class="slot-row" type="button" onclick={() => importInto(slot)}>
-                <span class="slot-name">{SLOT_LABEL_RU[slot]}</span>
-              </button>
-            </li>
-          {/each}
-        </ul>
       {:else if step === 'importing'}
         <div class="progress">
           <p class="progress-count">{doneCount} / {totalCount}</p>
@@ -179,7 +161,10 @@
               <br />Не получилось: <strong>{failedCount}</strong>
             {/if}
           </p>
-          <button class="primary" type="button" onclick={close}>Окей</button>
+          <p class="done-hint">
+            Все вещи помечены «Без слота». В гардеробе можно выделить нужные и разложить по категориям.
+          </p>
+          <button class="primary" type="button" onclick={close}>Хорошо</button>
         </div>
       {/if}
     </div>
@@ -190,7 +175,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: oklch(0 0 0 / 0.6);
+    background: var(--scrim);
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -339,7 +324,16 @@
   .done-stat {
     font-size: var(--text-lg);
     color: var(--text);
+    margin-bottom: var(--space-2xs);
+  }
+  .done-hint {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
     margin-bottom: var(--space-md);
+    line-height: var(--lh-snug);
+    max-width: 36ch;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .primary {

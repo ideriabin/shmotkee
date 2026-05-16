@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Триаж · UX варианты</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Yeseva+One&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: oklch(0.135 0.006 18);
+      --surface: oklch(0.180 0.006 18);
+      --surface-2: oklch(0.225 0.007 18);
+      --surface-3: oklch(0.275 0.008 18);
+      --text: oklch(0.965 0.005 30);
+      --text-soft: oklch(0.800 0.005 30);
+      --text-muted: oklch(0.580 0.006 30);
+      --text-faint: oklch(0.420 0.005 30);
+      --border: oklch(0.305 0.006 18);
+      --border-soft: oklch(0.230 0.006 18);
+      --accent: oklch(0.555 0.180 18);
+      --accent-on: oklch(0.985 0.003 18);
+      --accent-tint: oklch(0.555 0.180 18 / 0.12);
+      --tile: oklch(0.950 0.008 60);
+      --tile-ink: oklch(0.180 0.010 18);
+      --font-display: 'Yeseva One', 'Times New Roman', serif;
+      --font-ui: 'Onest', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 17px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .display { font-family: var(--font-display); font-weight: 400; line-height: 1.05; letter-spacing: -0.01em; }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 80px 24px 120px;
+    }
+
+    /* ─── intro ─── */
+    .intro {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      margin-bottom: 80px;
+    }
+    @media (min-width: 900px) {
+      .intro { grid-template-columns: 2fr 1fr; gap: 64px; }
+    }
+    .intro-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .intro-title {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 6vw, 72px);
+      line-height: 1;
+      margin: 0 0 24px;
+    }
+    .intro-title em { color: var(--accent); font-style: normal; }
+    .intro-lead {
+      font-size: 20px;
+      color: var(--text-soft);
+      max-width: 60ch;
+      line-height: 1.45;
+      margin: 0 0 16px;
+    }
+    .intro-sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 56ch;
+      line-height: 1.45;
+    }
+    .scope {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      padding: 24px;
+      border-radius: 2px;
+    }
+    .scope-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+    .scope-row:first-of-type { border-top: none; }
+    .scope-key { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .scope-val { font-size: 15px; color: var(--text); text-align: right; }
+
+    /* ─── option panel ─── */
+    .option {
+      padding: 64px 0;
+      border-top: 1px solid var(--border-soft);
+    }
+    .option:first-of-type { border-top: none; }
+    .option-head { margin-bottom: 32px; display: flex; gap: 24px; align-items: baseline; flex-wrap: wrap; }
+    .option-no {
+      font-family: var(--font-display);
+      font-size: 64px;
+      color: var(--accent);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+    }
+    .option-title { font-family: var(--font-display); font-size: 40px; line-height: 1; margin: 0; }
+    .option-tag { font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); display: inline-block; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (min-width: 900px) {
+      .option-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 64px; }
+    }
+
+    .mockups {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    /* phone frame */
+    .phone {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      aspect-ratio: 390 / 740;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px oklch(0 0 0 / 0.4);
+    }
+    .phone-step {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+    .phone-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 12px 0;
+      min-height: 0;
+    }
+
+    .h1 { font-family: var(--font-display); font-size: 28px; color: var(--text); line-height: 1; margin: 0 0 12px; }
+    .h1 .count { font-family: var(--font-display); font-size: 14px; color: var(--text-muted); margin-left: 4px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+    .chip {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      color: var(--text-soft);
+      white-space: nowrap;
+      background: transparent;
+    }
+    .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .chip.warn { color: var(--accent); border-color: var(--accent); font-weight: 500; }
+    .chip.drop { background: var(--accent-tint); color: var(--text); border-color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      flex: 1;
+      overflow: hidden;
+      align-content: start;
+    }
+    .tile {
+      background: var(--tile);
+      aspect-ratio: 1;
+      border-radius: 2px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 10%;
+      overflow: hidden;
+    }
+    .tile.selected::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--accent);
+      border-radius: 2px;
+    }
+    .tile-check {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      color: var(--accent-on);
+      border-radius: 50%;
+      font-size: 9px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-family: var(--font-ui);
+    }
+    .tile-name {
+      position: absolute;
+      bottom: 2px;
+      left: 4px;
+      right: 4px;
+      font-size: 8px;
+      color: var(--text);
+      line-height: 1.1;
+      background: oklch(0 0 0 / 0.55);
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+    .tile-shape { width: 100%; height: 100%; }
+
+    /* fake item silhouettes */
+    .silh-tee { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M25 28 L40 22 C45 30 55 30 60 22 L75 28 L82 44 L75 47 L75 84 L25 84 L25 47 L18 44 Z' fill='%23161114'/></svg>") center/contain no-repeat; }
+    .silh-tee-w { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M25 28 L40 22 C45 30 55 30 60 22 L75 28 L82 44 L75 47 L75 84 L25 84 L25 47 L18 44 Z' fill='%23ECE8E4'/></svg>") center/contain no-repeat; }
+    .silh-pants { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 10 L70 10 L72 40 L62 92 L52 92 L50 45 L48 92 L38 92 L28 40 Z' fill='%230A0708'/></svg>") center/contain no-repeat; }
+    .silh-bag { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M25 38 L75 38 L78 88 L22 88 Z' fill='%23E9E5E1'/><path d='M38 38 Q50 22 62 38' fill='none' stroke='%23E9E5E1' stroke-width='3'/></svg>") center/contain no-repeat; }
+    .silh-shoe { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M15 55 L78 50 Q92 50 92 70 L78 70 L15 70 Z' fill='%238A1C2A'/></svg>") center/contain no-repeat; }
+    .silh-shoe-b { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M15 55 L78 50 Q92 50 92 70 L78 70 L15 70 Z' fill='%230B0809'/></svg>") center/contain no-repeat; }
+    .silh-coat { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M18 18 L40 12 L50 22 L60 12 L82 18 L92 46 L85 50 L85 92 L15 92 L15 50 L8 46 Z' fill='%231B1416'/></svg>") center/contain no-repeat; }
+    .silh-dress { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 15 L42 10 Q46 25 54 25 Q58 25 58 10 L70 15 L66 50 L90 95 L10 95 L34 50 Z' fill='%230F0B0C'/></svg>") center/contain no-repeat; }
+    .silh-glasses { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><ellipse cx='32' cy='50' rx='15' ry='10' fill='%230D0809'/><ellipse cx='68' cy='50' rx='15' ry='10' fill='%230D0809'/><path d='M47 50 L53 50' stroke='%230D0809' stroke-width='3'/></svg>") center/contain no-repeat; }
+    .silh-cardigan { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M20 20 L40 18 L50 32 L60 18 L80 20 L88 50 L80 55 L78 90 L22 90 L20 55 L12 50 Z M50 32 L50 90' fill='%233A3338' stroke='%233A3338'/></svg>") center/contain no-repeat; }
+
+    .nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 8px 0;
+      border-top: 1px solid var(--border-soft);
+    }
+    .nav-item {
+      text-align: center;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 6px 0;
+      position: relative;
+    }
+    .nav-item.active { color: var(--text); }
+    .nav-item.active::after { content: ''; position: absolute; left: 30%; right: 30%; bottom: 0; height: 2px; background: var(--accent); }
+
+    .topbar-select {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .topbar-title { font-size: 14px; font-weight: 500; }
+    .topbar-x { width: 24px; height: 24px; display: grid; place-items: center; color: var(--text-muted); font-size: 16px; }
+
+    .drop-chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* ─── option 1: sequential triage ─── */
+    .triage-frame {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 0;
+    }
+    .triage-counter {
+      font-family: var(--font-display);
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .triage-counter span { color: var(--text-muted); }
+    .triage-preview {
+      flex: 1;
+      background: var(--tile);
+      border-radius: 2px;
+      display: grid;
+      place-items: center;
+      padding: 18%;
+      margin-bottom: 10px;
+      min-height: 0;
+    }
+    .slot-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    .slot-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border-soft);
+      color: var(--text);
+      font-size: 11px;
+      padding: 8px 6px;
+      border-radius: 2px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .slot-btn.last { color: var(--text-muted); }
+
+    /* ─── option 3: bottom sheet ─── */
+    .sheet-shadow {
+      position: absolute;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+    }
+    .sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 6px 6px 0 0;
+      padding: 14px 12px;
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 12px;
+    }
+    .sheet-title { font-family: var(--font-display); font-size: 18px; margin-bottom: 12px; }
+
+    /* ─── option 4: radial menu ─── */
+    .radial-wrap { flex: 1; position: relative; }
+    .radial-focus {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: var(--tile);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      padding: 18%;
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--accent), 0 16px 32px oklch(0 0 0 / 0.5);
+    }
+    .radial-ring {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 220px;
+      height: 220px;
+      pointer-events: none;
+    }
+    .radial-slot {
+      position: absolute;
+      width: 60px;
+      height: 28px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 10px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      transform: translate(-50%, -50%);
+    }
+    .radial-slot.hover { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
+    .radial-hint {
+      position: absolute;
+      bottom: 60px;
+      left: 12px;
+      right: 12px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ─── how it works panel ─── */
+    .how { padding-left: 0; }
+    .how-section + .how-section { margin-top: 24px; }
+    .how-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .how-list { padding: 0; list-style: none; }
+    .how-list li {
+      font-size: 15px;
+      color: var(--text-soft);
+      padding: 6px 0;
+      border-top: 1px solid var(--border-soft);
+      line-height: 1.4;
+    }
+    .how-list li:first-child { border-top: none; }
+    .how-list strong { color: var(--text); font-weight: 500; }
+
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .pros-cons h4 { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 8px; }
+    .pros-cons ul { list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.4; color: var(--text-soft); }
+    .pros-cons li { padding: 4px 0; }
+    .pros-cons .pros li::before { content: '+ '; color: var(--accent); font-weight: 600; }
+    .pros-cons .cons li::before { content: '− '; color: var(--text-faint); }
+
+    /* ─── matrix ─── */
+    .matrix-wrap {
+      margin-top: 96px;
+      padding: 48px 32px;
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: 2px;
+    }
+    .matrix-title { font-family: var(--font-display); font-size: 36px; margin: 0 0 8px; }
+    .matrix-sub { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }
+    .matrix {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.4fr) repeat(4, 1fr);
+      gap: 0;
+      font-size: 13px;
+    }
+    .matrix > * {
+      padding: 12px 8px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .matrix-h {
+      font-family: var(--font-display);
+      font-size: 14px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      border-top: none;
+    }
+    .matrix-row-h {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .rank-good { color: var(--accent); font-weight: 600; }
+    .rank-ok { color: var(--text); }
+    .rank-meh { color: var(--text-muted); }
+    .rank-bad { color: var(--text-faint); }
+
+    .recco {
+      margin-top: 96px;
+      padding: 48px 32px;
+      background: var(--accent-tint);
+      border-left: none;
+      border-radius: 2px;
+    }
+    .recco-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
+    .recco-title { font-family: var(--font-display); font-size: 32px; margin: 0 0 12px; line-height: 1.1; }
+    .recco-body { color: var(--text-soft); max-width: 64ch; font-size: 16px; line-height: 1.5; }
+    .recco-body em { color: var(--accent); font-style: normal; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- intro -->
+  <section class="intro">
+    <div>
+      <p class="intro-eyebrow">UX research · 2026-05-16</p>
+      <h1 class="intro-title display">Как <em>быстро</em> разобрать<br/>150 фоток?</h1>
+      <p class="intro-lead">
+        Вкладка <strong>Гардероб</strong> — операционная для шмоток. После того, как фотки залиты пачкой,
+        нужно за один сеанс разнести их по слотам: <em>верх / низ / платья / верхняя / обувь / аксессуары / другое</em>.
+      </p>
+      <p class="intro-sub">
+        Ниже четыре подхода для тач-устройств (iPhone/iPad), плюс один «идеальный» как ориентир.
+        Каждый показан в виде последовательных экранов, как это будет ощущаться в реальности.
+      </p>
+    </div>
+    <aside class="scope">
+      <div class="scope-row"><span class="scope-key">контекст</span><span class="scope-val">150 шмоток одним заходом</span></div>
+      <div class="scope-row"><span class="scope-key">устройство</span><span class="scope-val">iPhone и iPad</span></div>
+      <div class="scope-row"><span class="scope-key">режим</span><span class="scope-val">тач, одна рука</span></div>
+      <div class="scope-row"><span class="scope-key">слотов</span><span class="scope-val">7 + «Позже»</span></div>
+      <div class="scope-row"><span class="scope-key">требования</span><span class="scope-val">отмена, массовость, ошибки исправимы</span></div>
+    </aside>
+  </section>
+
+  <!-- ────────── option 1 ────────── -->
+  <section class="option">
+    <header class="option-head">
+      <span class="option-no">01</span>
+      <h2 class="option-title">Поштучный триаж</h2>
+      <span class="option-tag">tinder для категорий</span>
+    </header>
+    <div class="option-grid">
+      <div class="mockups">
+
+        <div>
+        <div class="phone"><div class="phone-inner triage-frame">
+          <p class="triage-counter">1 <span>/ 150</span></p>
+          <div class="triage-preview"><div class="tile-shape silh-tee-w"></div></div>
+          <div class="slot-buttons">
+            <button class="slot-btn">Верх</button>
+            <button class="slot-btn">Низ</button>
+            <button class="slot-btn">Платья</button>
+            <button class="slot-btn">Верхняя</button>
+            <button class="slot-btn">Обувь</button>
+            <button class="slot-btn">Аксессуары</button>
+            <button class="slot-btn">Другое</button>
+            <button class="slot-btn last">Позже</button>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 1 · открыли</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner triage-frame">
+          <p class="triage-counter">2 <span>/ 150</span></p>
+          <div class="triage-preview"><div class="tile-shape silh-pants"></div></div>
+          <div class="slot-buttons">
+            <button class="slot-btn" style="background: var(--accent); border-color: var(--accent); color: var(--accent-on);">Верх</button>
+            <button class="slot-btn">Низ</button>
+            <button class="slot-btn">Платья</button>
+            <button class="slot-btn">Верхняя</button>
+            <button class="slot-btn">Обувь</button>
+            <button class="slot-btn">Аксессуары</button>
+            <button class="slot-btn">Другое</button>
+            <button class="slot-btn last">Позже</button>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 2 · тап слота</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner triage-frame">
+          <p class="triage-counter">150 <span>/ 150</span></p>
+          <div class="triage-preview" style="background: var(--surface); padding: 8%;">
+            <p class="display" style="font-size: 22px; text-align: center; color: var(--text);">Готово.<br/><span style="color: var(--accent)">137 разобрано</span></p>
+          </div>
+          <div class="slot-buttons">
+            <button class="slot-btn" style="grid-column: 1 / -1; background: var(--accent); border-color: var(--accent); color: var(--accent-on);">Закрыть</button>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 3 · финиш</p>
+        </div>
+
+      </div>
+
+      <div class="how">
+        <div class="how-section">
+          <p class="how-eyebrow">как работает</p>
+          <ul class="how-list">
+            <li><strong>После загрузки</strong> сразу открывается фуллскрин-триаж, один айтем на экран.</li>
+            <li><strong>Большой превью</strong> сверху, сетка из 8 кнопок снизу (7 слотов + «Позже»).</li>
+            <li><strong>Один тап</strong> → айтем уезжает, следующий въезжает.</li>
+            <li><strong>Свайп влево</strong> вверху = «назад» — переклассифицировать предыдущий.</li>
+          </ul>
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>Сильные стороны</h4>
+            <ul>
+              <li>0 ментальной нагрузки на айтем</li>
+              <li>Огромные таргеты — палец не промажет</li>
+              <li>Можно делать одной рукой</li>
+              <li>Прогресс виден — «1/150»</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>Слабые стороны</h4>
+            <ul>
+              <li>Линейно — нельзя пропускать в произвольном порядке</li>
+              <li>Не видно контекста других вещей</li>
+              <li>Похожие айтемы подряд = монотонно</li>
+              <li>Не подходит, если шмотки одна на другую похожи</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── option 2 ────────── -->
+  <section class="option">
+    <header class="option-head">
+      <span class="option-no">02</span>
+      <h2 class="option-title">Множественный выбор + чипы-цели</h2>
+      <span class="option-tag">паралельная пакетная классификация</span>
+    </header>
+    <div class="option-grid">
+      <div class="mockups">
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 150</span>
+            <span class="chip active">Все 150</span>
+            <span class="chip">Верх 0</span>
+            <span class="chip">Низ 0</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 1 · обычный вид</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <div class="topbar-select">
+            <span class="topbar-title">5 выбрано</span>
+            <span class="topbar-x">✕</span>
+          </div>
+          <div class="drop-chips">
+            <span class="chip drop">→ Верх</span>
+            <span class="chip drop">→ Низ</span>
+            <span class="chip drop">→ Платья</span>
+            <span class="chip drop">→ Верх­няя</span>
+            <span class="chip drop">→ Обувь</span>
+          </div>
+          <div class="grid">
+            <div class="tile selected"><div class="tile-shape silh-tee-w"></div><div class="tile-check">✓</div></div>
+            <div class="tile selected"><div class="tile-shape silh-tee"></div><div class="tile-check">✓</div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile selected"><div class="tile-shape silh-dress"></div><div class="tile-check">✓</div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile selected"><div class="tile-shape silh-cardigan"></div><div class="tile-check">✓</div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 2 · долгий тап → выбор</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 145</span>
+            <span class="chip">Верх 5</span>
+            <span class="chip">Низ 0</span>
+            <span class="chip">Платья 0</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee-w" style="opacity: 0.3;"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe-b"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress" style="opacity: 0.3;"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+          </div>
+          <div style="position: absolute; bottom: 56px; left: 12px; right: 12px; background: var(--surface-2); border: 1px solid var(--border); padding: 8px 12px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+            <span>Перемещено 5 в Верх</span>
+            <span style="color: var(--accent); font-weight: 500;">Отменить</span>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 3 · тап «→ Верх», отмена 5с</p>
+        </div>
+
+      </div>
+
+      <div class="how">
+        <div class="how-section">
+          <p class="how-eyebrow">как работает</p>
+          <ul class="how-list">
+            <li><strong>Долгий тап на тайл</strong> или кнопка «Выбрать» включает режим выбора.</li>
+            <li><strong>Тапы по тайлам</strong> добавляют/убирают из выбора.</li>
+            <li><strong>Чипы сверху меняют роль</strong>: были фильтры → стали «→ В Верх», «→ В Низ».</li>
+            <li><strong>Тап чипа-цели</strong> → все выбранные айтемы переезжают, появляется тост-отмена.</li>
+            <li><strong>5-секундная отмена</strong> возвращает всё назад.</li>
+          </ul>
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>Сильные стороны</h4>
+            <ul>
+              <li>Видишь весь гардероб параллельно</li>
+              <li>Группируешь похожее → разом</li>
+              <li>Чипы уже на экране — не надо учить</li>
+              <li>Отмена встроена</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>Слабые стороны</h4>
+            <ul>
+              <li>Два шага: выделить → нажать чип</li>
+              <li>На большом массиве — много тапов выделения</li>
+              <li>Чипы-цели могут крошечно отображаться</li>
+              <li>Долгий тап надо «обнаружить»</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── option 3 ────────── -->
+  <section class="option">
+    <header class="option-head">
+      <span class="option-no">03</span>
+      <h2 class="option-title">Тап → шторка</h2>
+      <span class="option-tag">без режимов</span>
+    </header>
+    <div class="option-grid">
+      <div class="mockups">
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 150</span>
+            <span class="chip active">Все</span>
+            <span class="chip">Верх 0</span>
+            <span class="chip">Низ 0</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 1 · обычный вид</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner" style="position: relative;">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 150</span>
+            <span class="chip active">Все</span>
+            <span class="chip">Верх 0</span>
+            <span class="chip">Низ 0</span>
+          </div>
+          <div class="grid" style="filter: blur(2px); opacity: 0.4;">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+          </div>
+          <div class="sheet-shadow"></div>
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <p class="sheet-title">Куда?</p>
+            <div class="slot-buttons">
+              <button class="slot-btn">Верх</button>
+              <button class="slot-btn">Низ</button>
+              <button class="slot-btn">Платья</button>
+              <button class="slot-btn">Верхняя</button>
+              <button class="slot-btn">Обувь</button>
+              <button class="slot-btn">Аксессуары</button>
+              <button class="slot-btn">Другое</button>
+              <button class="slot-btn last">Удалить</button>
+            </div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 2 · тап → шторка</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 149</span>
+            <span class="chip">Верх 1</span>
+            <span class="chip">Низ 0</span>
+            <span class="chip">Платья 0</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee" style="opacity: 0.4;"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 3 · готово, следующий</p>
+        </div>
+
+      </div>
+
+      <div class="how">
+        <div class="how-section">
+          <p class="how-eyebrow">как работает</p>
+          <ul class="how-list">
+            <li><strong>Тап на «без слота» айтем</strong> поднимает шторку со слотами.</li>
+            <li><strong>Тап слота в шторке</strong> → айтем уезжает, шторка закрывается.</li>
+            <li><strong>Никакого режима</strong> — обычный гардеробный экран остаётся.</li>
+            <li>Тап на уже-классифицированный айтем → знакомый item-detail.</li>
+          </ul>
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>Сильные стороны</h4>
+            <ul>
+              <li>Никакого переключения режимов</li>
+              <li>Понятно с первого тапа</li>
+              <li>Хорошо для трикл-импортов (1-5 шмоток)</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>Слабые стороны</h4>
+            <ul>
+              <li>150 шмоток = 150 тапов + 150 раз ждать анимацию шторки</li>
+              <li>Нет батч-операций вообще</li>
+              <li>Утомительно при объёме</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── option 4 ────────── -->
+  <section class="option">
+    <header class="option-head">
+      <span class="option-no">04</span>
+      <h2 class="option-title">Долгий тап → радиальное меню</h2>
+      <span class="option-tag">тач-ниндзя</span>
+    </header>
+    <div class="option-grid">
+      <div class="mockups">
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Без слота 150</span>
+            <span class="chip active">Все</span>
+            <span class="chip">Верх 0</span>
+            <span class="chip">Низ 0</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 1 · обычный вид</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner" style="position: relative; background: oklch(0 0 0 / 0.5);">
+          <div class="grid" style="opacity: 0.15;">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+          </div>
+          <div class="radial-wrap">
+            <div class="radial-focus"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="radial-ring">
+              <div class="radial-slot" style="top: 0; left: 50%;">Верх</div>
+              <div class="radial-slot" style="top: 18%; left: 92%;">Низ</div>
+              <div class="radial-slot" style="top: 50%; left: 100%;">Платья</div>
+              <div class="radial-slot" style="top: 82%; left: 92%;">Верхняя</div>
+              <div class="radial-slot" style="top: 100%; left: 50%;">Обувь</div>
+              <div class="radial-slot" style="top: 82%; left: 8%;">Аксес.</div>
+              <div class="radial-slot" style="top: 50%; left: 0%;">Другое</div>
+            </div>
+          </div>
+          <p class="radial-hint">тяни палец к слоту · отпусти = выбрал</p>
+        </div></div>
+        <p class="phone-step">шаг 2 · долгий тап → веер</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner" style="position: relative; background: oklch(0 0 0 / 0.5);">
+          <div class="grid" style="opacity: 0.15;">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+          </div>
+          <div class="radial-wrap">
+            <div class="radial-focus"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="radial-ring">
+              <div class="radial-slot hover" style="top: 0; left: 50%;">Верх</div>
+              <div class="radial-slot" style="top: 18%; left: 92%;">Низ</div>
+              <div class="radial-slot" style="top: 50%; left: 100%;">Платья</div>
+              <div class="radial-slot" style="top: 82%; left: 92%;">Верхняя</div>
+              <div class="radial-slot" style="top: 100%; left: 50%;">Обувь</div>
+              <div class="radial-slot" style="top: 82%; left: 8%;">Аксес.</div>
+              <div class="radial-slot" style="top: 50%; left: 0%;">Другое</div>
+            </div>
+          </div>
+          <p class="radial-hint">верх · отпусти чтобы подтвердить</p>
+        </div></div>
+        <p class="phone-step">шаг 3 · подсветка цели</p>
+        </div>
+
+      </div>
+
+      <div class="how">
+        <div class="how-section">
+          <p class="how-eyebrow">как работает</p>
+          <ul class="how-list">
+            <li><strong>Долгий тап на айтем</strong> разворачивает веер из 7 слотов вокруг пальца.</li>
+            <li><strong>Не отрывая палец</strong>, тянешь к нужному слоту — он подсвечивается.</li>
+            <li><strong>Отпускаешь</strong> → айтем классифицирован, веер сворачивается.</li>
+            <li>Тап-без-долгого открывает item-detail (как раньше).</li>
+          </ul>
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>Сильные стороны</h4>
+            <ul>
+              <li>1 жест = 1 решение, очень быстро</li>
+              <li>Палец не закрывает превью</li>
+              <li>«Мышечная память» в каждом направлении</li>
+              <li>Ощущается как нативная iOS-фишка</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>Слабые стороны</h4>
+            <ul>
+              <li>Учиться надо — не очевидно с первого раза</li>
+              <li>7 целей на маленьком экране — теснота</li>
+              <li>Случайные срабатывания при скролле</li>
+              <li>Сложнее реализовать корректно</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── option 5: bonus ────────── -->
+  <section class="option">
+    <header class="option-head">
+      <span class="option-no">05</span>
+      <h2 class="option-title">Авто-классификация + подтверждение</h2>
+      <span class="option-tag">бонус · не сейчас</span>
+    </header>
+    <div class="option-grid">
+      <div class="mockups">
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip warn">Подтвердить 142</span>
+            <span class="chip">Не уверен 8</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div><div class="tile-name">Верх ?</div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div><div class="tile-name">Верх ?</div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div><div class="tile-name">Низ ?</div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div><div class="tile-name">Аксес. ?</div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div><div class="tile-name">Обувь ?</div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div><div class="tile-name">Верх­няя ?</div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div><div class="tile-name">Платья ?</div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div><div class="tile-name">Аксес. ?</div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div><div class="tile-name">Верх ?</div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 1 · модель предложила</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner" style="position: relative;">
+          <div class="grid" style="filter: blur(2px); opacity: 0.4;">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+          </div>
+          <div class="sheet-shadow"></div>
+          <div class="sheet">
+            <p class="sheet-title display" style="font-size: 22px;">Принять предложения?</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px; line-height: 1.4;">
+              142 айтема классифицированы автоматически.<br/>8 — нужно посмотреть руками.
+            </p>
+            <div class="slot-buttons">
+              <button class="slot-btn" style="background: var(--accent); border-color: var(--accent); color: var(--accent-on); grid-column: 1 / -1;">Принять 142 → разобрать 8</button>
+              <button class="slot-btn" style="grid-column: 1 / -1;">Смотреть всё</button>
+            </div>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 2 · батч-подтверждение</p>
+        </div>
+
+        <div>
+        <div class="phone"><div class="phone-inner">
+          <h3 class="h1">Гардероб<span class="count">150</span></h3>
+          <div class="chips">
+            <span class="chip">Без слота 0</span>
+            <span class="chip">Верх 38</span>
+            <span class="chip">Низ 22</span>
+            <span class="chip">Обувь 18</span>
+          </div>
+          <div class="grid">
+            <div class="tile"><div class="tile-shape silh-tee-w"></div></div>
+            <div class="tile"><div class="tile-shape silh-tee"></div></div>
+            <div class="tile"><div class="tile-shape silh-pants"></div></div>
+            <div class="tile"><div class="tile-shape silh-bag"></div></div>
+            <div class="tile"><div class="tile-shape silh-shoe"></div></div>
+            <div class="tile"><div class="tile-shape silh-coat"></div></div>
+            <div class="tile"><div class="tile-shape silh-dress"></div></div>
+            <div class="tile"><div class="tile-shape silh-glasses"></div></div>
+            <div class="tile"><div class="tile-shape silh-cardigan"></div></div>
+          </div>
+          <div class="nav">
+            <span class="nav-item active">Гардероб</span>
+            <span class="nav-item">Собрать</span>
+            <span class="nav-item">Образы</span>
+          </div>
+        </div></div>
+        <p class="phone-step">шаг 3 · готово за 2 тапа</p>
+        </div>
+
+      </div>
+
+      <div class="how">
+        <div class="how-section">
+          <p class="how-eyebrow">как работает</p>
+          <ul class="how-list">
+            <li><strong>Клиентская модель</strong> (CLIP/MobileNet в WASM, ~30МБ) предсказывает слот при загрузке.</li>
+            <li><strong>Уверенные предсказания</strong> (≥0.8) показаны с пометкой «Верх?».</li>
+            <li><strong>«Принять все»</strong> — батч-классифицирует уверенные за один тап.</li>
+            <li><strong>Неуверенные</strong> отправляются в режим 01 (поштучный триаж).</li>
+          </ul>
+        </div>
+        <div class="pros-cons">
+          <div class="pros">
+            <h4>Сильные стороны</h4>
+            <ul>
+              <li>150 → 8 решений вместо 150</li>
+              <li>«Магия» — wow-эффект</li>
+              <li>Гибрид с любым из 01-04</li>
+            </ul>
+          </div>
+          <div class="cons">
+            <h4>Слабые стороны</h4>
+            <ul>
+              <li>+30МБ модель → жёр трафика</li>
+              <li>На айфоне декодирование 150 картинок займёт минуту</li>
+              <li>Может ошибиться → нужна доверительная UX</li>
+              <li>Нетривиально в имплементации</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────── matrix ────────── -->
+  <section class="matrix-wrap">
+    <h2 class="matrix-title display">Сравнение по критериям</h2>
+    <p class="matrix-sub">Чем выше насыщенность бургунди — тем сильнее в данном измерении.</p>
+    <div class="matrix">
+      <div class="matrix-h"></div>
+      <div class="matrix-h">01 · Поштучный</div>
+      <div class="matrix-h">02 · Множественный</div>
+      <div class="matrix-h">03 · Шторка</div>
+      <div class="matrix-h">04 · Радиальное</div>
+
+      <div class="matrix-row-h">Скорость на 150 шт.</div>
+      <div class="rank-good">★★★ ~3 мин</div>
+      <div class="rank-good">★★★ ~2 мин (если группами)</div>
+      <div class="rank-meh">★ ~6 мин</div>
+      <div class="rank-good">★★★ ~2.5 мин</div>
+
+      <div class="matrix-row-h">Простота для нового юзера</div>
+      <div class="rank-good">очевидно</div>
+      <div class="rank-ok">надо понять режим</div>
+      <div class="rank-good">очевидно</div>
+      <div class="rank-meh">надо найти жест</div>
+
+      <div class="matrix-row-h">Контекст видно</div>
+      <div class="rank-bad">нет</div>
+      <div class="rank-good">весь гардероб</div>
+      <div class="rank-ok">фон виден</div>
+      <div class="rank-meh">только этот айтем</div>
+
+      <div class="matrix-row-h">Можно ошибиться?</div>
+      <div class="rank-good">отмена один шаг назад</div>
+      <div class="rank-good">5-сек тост-отмена</div>
+      <div class="rank-ok">переоткрыть айтем</div>
+      <div class="rank-ok">случайные срабатывания</div>
+
+      <div class="matrix-row-h">Трикл-импорт (1-3 шт)</div>
+      <div class="rank-meh">избыточно</div>
+      <div class="rank-ok">2 шага</div>
+      <div class="rank-good">идеально</div>
+      <div class="rank-ok">1 жест</div>
+
+      <div class="matrix-row-h">Сложность реализации</div>
+      <div class="rank-good">низкая</div>
+      <div class="rank-ok">средняя</div>
+      <div class="rank-good">низкая</div>
+      <div class="rank-bad">высокая</div>
+
+      <div class="matrix-row-h">Одна рука</div>
+      <div class="rank-good">да</div>
+      <div class="rank-meh">сложно</div>
+      <div class="rank-good">да</div>
+      <div class="rank-good">да</div>
+    </div>
+  </section>
+
+  <!-- ────────── recommendation ────────── -->
+  <section class="recco">
+    <p class="recco-eyebrow">моя рекомендация</p>
+    <h2 class="recco-title display">02 + 01 как fallback.</h2>
+    <p class="recco-body">
+      Базовое поведение — <em>множественный выбор + чипы-цели (02)</em>: она быстро группирует похожее
+      («все футболки», «все джинсы») и батчами переносит. Это даёт максимальную скорость на 150 айтемах,
+      потому что в гардеробе много «семей» похожих вещей.
+    </p>
+    <p class="recco-body" style="margin-top: 12px;">
+      На случай, если эта механика не зайдёт или для «остатков», <em>в углу есть кнопка «Разобрать по одному»</em> —
+      она открывает <em>поштучный триаж (01)</em>. Так у неё есть выбор: батч-режим для оптимизации,
+      линейный режим — когда лень думать.
+    </p>
+    <p class="recco-body" style="margin-top: 12px; color: var(--text-muted); font-size: 14px;">
+      03 я бы оставил для трикл-импортов (когда она доливает 1-2 шмотки) — просто как поведение тапа на «без слота» айтем.
+      04 — слишком хитрая для v1. 05 — отличная цель для v2, когда у нас будут реальные данные для проверки модели.
+    </p>
+  </section>
+
+</div>
+</body>
+</html>

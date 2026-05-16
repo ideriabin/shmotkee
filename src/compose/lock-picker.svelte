@@ -21,7 +21,11 @@
   let filter = $state<'all' | SlotKey>('all');
 
   $effect(() => {
-    const obs = liveQuery(() => db.items.orderBy('createdAt').reverse().toArray());
+    // Unclassified items can't be locked because the generator can't place
+    // them; filter them out at source.
+    const obs = liveQuery(() =>
+      db.items.orderBy('createdAt').filter((it) => it.slot !== null).reverse().toArray(),
+    );
     const sub = obs.subscribe({ next: (v) => (items = v) });
     return () => sub.unsubscribe();
   });
@@ -97,7 +101,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: oklch(0 0 0 / 0.6);
+    background: var(--scrim);
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -184,13 +188,14 @@
     overflow: hidden;
   }
   .tile-photo {
-    background: var(--bg);
+    background: var(--tile);
     aspect-ratio: 1;
     padding: 8%;
     position: relative;
     transition: outline var(--dur-quick) var(--ease-out);
     outline: 2px solid transparent;
     outline-offset: -2px;
+    border-radius: var(--radius-2);
   }
   .tile.selected .tile-photo {
     outline-color: var(--accent);
