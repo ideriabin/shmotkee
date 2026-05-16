@@ -8,10 +8,13 @@
 
   // Register the service worker once on app start. In dev (no production
   // build), we silently skip — vite serves /sw.js but registering during
-  // HMR is noisy and unnecessary.
+  // HMR is noisy and unnecessary. In prod the worker lives under the
+  // configured base path (`/shmotkee/sw.js` on GitHub Pages).
   $effect(() => {
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker
+        .register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
+        .catch(() => {});
     }
   });
 </script>

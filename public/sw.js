@@ -6,9 +6,13 @@
 
 const SHELL_VERSION = 'shell-v1';
 
+// Relative paths resolve against the SW's URL — so on GitHub Pages where
+// the SW lives at /shmotkee/sw.js, './' is /shmotkee/, etc.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_VERSION).then((cache) => cache.addAll(['/', '/index.html', '/manifest.webmanifest', '/icon.svg'])),
+    caches
+      .open(SHELL_VERSION)
+      .then((cache) => cache.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg'])),
   );
   self.skipWaiting();
 });
