@@ -64,6 +64,11 @@
   /* ─── radii ───────────────────────────────────────────────────────── */
   --radius-1: 1px;
   --radius-2: 2px;
+  /* Soft radius for floating surfaces & containers that should read
+     as tactile rather than inline. Used on: floating nav, action
+     sheets, modal sheets, tile photo backdrops. Inline UI
+     (inputs, chips, small buttons) keeps the sharp --radius-2. */
+  --radius-3: 14px;
   --radius-pill: 999px;
 
   /* ─── type: families ──────────────────────────────────────────────── */

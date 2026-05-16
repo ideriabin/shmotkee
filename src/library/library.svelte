@@ -61,11 +61,21 @@
     }
   });
 
-  const filtered = $derived.by(() => {
-    if (filter === 'all') return items;
-    if (filter === 'unclassified') return items.filter((it) => it.slot === null);
-    return items.filter((it) => it.slot === filter);
-  });
+  /**
+   * Whether an item is visible under the current filter. We render
+   * EVERY item all the time and toggle visibility via class:hidden,
+   * not via re-filtering the array — that way Svelte never unmounts
+   * a Thumb on filter change, which would otherwise revoke its
+   * objectURL and force the image to re-decode (the visible "flicker"
+   * on category swap with real photos).
+   */
+  function matchesFilter(it: Item): boolean {
+    if (filter === 'all') return true;
+    if (filter === 'unclassified') return it.slot === null;
+    return it.slot === filter;
+  }
+
+  const filtered = $derived.by(() => items.filter(matchesFilter));
 
   const slotCounts = $derived.by(() => {
     const counts: Record<string, number> = { all: items.length, unclassified: 0 };
@@ -324,9 +334,10 @@
     </div>
   {:else}
     <ul class="grid" class:in-selection={inSelection}>
-      {#each filtered as item (item.id)}
+      {#each items as item (item.id)}
         {@const isSelected = selectedIds.has(item.id)}
-        <li>
+        {@const shown = matchesFilter(item)}
+        <li class:hidden={!shown}>
           <button
             class="tile"
             class:selected={isSelected}
@@ -606,6 +617,11 @@
     gap: var(--space-xs);
     grid-template-columns: repeat(3, 1fr);
   }
+  /* Items leaving the filter are hidden via display:none, not unmounted —
+     keeps each Thumb's objectURL alive across filter changes. */
+  .grid > li.hidden {
+    display: none;
+  }
   @media (min-width: 600px) {
     .grid { grid-template-columns: repeat(4, 1fr); gap: var(--space-sm); }
   }
@@ -641,7 +657,7 @@
     aspect-ratio: 1;
     padding: 8%;
     margin-bottom: var(--space-2xs);
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-3);
     position: relative;
     transition: filter var(--dur-quick) var(--ease-out), outline var(--dur-quick) var(--ease-out);
     outline: 2px solid transparent;

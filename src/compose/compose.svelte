@@ -384,7 +384,7 @@
     background: var(--tile);
     padding: 6%;
     margin-bottom: var(--space-3xs);
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-3);
   }
   .lock-remove {
     position: absolute;

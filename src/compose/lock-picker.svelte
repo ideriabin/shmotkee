@@ -226,7 +226,7 @@
     transition: outline var(--dur-quick) var(--ease-out);
     outline: 2px solid transparent;
     outline-offset: -2px;
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-3);
   }
   .tile-photo :global(img) {
     pointer-events: none;

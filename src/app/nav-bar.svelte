@@ -55,7 +55,7 @@
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     border: 1px solid var(--border-soft);
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-3);
     padding: var(--space-3xs) var(--nav-pad);
     display: flex;
     align-items: center;
@@ -92,22 +92,21 @@
     gap: var(--space-3xs);
     position: relative;
   }
-  /* Sliding accent indicator: a single element that animates between
-     tab columns instead of three independent ::after underlines that
-     would each snap on tab change. --tab-index is set inline. */
+  /* Sliding accent-tint background that highlights the active tab.
+     Sits BEHIND the tab content (z-index 0) and slides between
+     positions. Pattern from Apple Music's floating tab bar — the
+     active tab feels selected without a separate underline. */
   .indicator {
     position: absolute;
     width: calc((100% - 2 * var(--space-3xs)) / 3);
-    height: 2px;
-    bottom: -3px;
+    top: var(--space-3xs);
+    bottom: var(--space-3xs);
     left: calc(var(--tab-index, 0) * (100% + var(--space-3xs)) / 3);
-    background: var(--accent);
-    transform: scaleX(0.4);
-    transform-origin: center;
-    transition:
-      left var(--dur-base) var(--ease-out-expo),
-      transform var(--dur-quick) var(--ease-out);
-    will-change: left, transform;
+    background: var(--accent-tint);
+    border-radius: calc(var(--radius-3) - var(--space-3xs));
+    transition: left var(--dur-base) var(--ease-out-expo);
+    will-change: left;
+    z-index: 0;
   }
 
   .tab {
@@ -123,6 +122,7 @@
     border-radius: var(--radius-1);
     transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
     position: relative;
+    z-index: 1;
   }
   /* Fixed-size icon container — lucide glyphs vary in width within
      their 24×24 viewBox, so without a constant bounding box the labels
@@ -143,7 +143,7 @@
     transition-duration: 60ms;
   }
   .tab.active {
-    color: var(--text);
+    color: var(--accent);
   }
 
   .tab-label {

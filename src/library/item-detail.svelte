@@ -228,7 +228,7 @@
   .preview {
     background: var(--tile);
     border: 1px solid var(--border-soft);
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-3);
     aspect-ratio: 4 / 5;
     max-height: 40dvh;
     max-width: 100%;

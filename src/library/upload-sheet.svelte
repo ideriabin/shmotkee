@@ -210,7 +210,7 @@
     width: 100%;
     max-width: 560px;
     border-top: 1px solid var(--border);
-    border-radius: var(--radius-2) var(--radius-2) 0 0;
+    border-radius: var(--radius-3) var(--radius-3) 0 0;
     padding: var(--space-md);
     padding-top: calc(var(--space-md) + 18px); /* room for grabber */
     padding-bottom: calc(var(--space-md) + var(--safe-bottom));
