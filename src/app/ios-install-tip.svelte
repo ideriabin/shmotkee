@@ -60,7 +60,7 @@
     position: fixed;
     left: var(--space-sm);
     right: var(--space-sm);
-    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md));
+    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md) + var(--space-2xs));
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-2);

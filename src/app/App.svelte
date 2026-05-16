@@ -60,7 +60,8 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-top: var(--safe-top);
-    padding-bottom: calc(var(--nav-height-mobile) + var(--safe-bottom));
+    /* Clear the floating nav: nav visual height + bottom gap + below-nav margin. */
+    padding-bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-sm));
     overscroll-behavior-y: contain;
     opacity: 0;
     pointer-events: none;

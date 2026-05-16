@@ -54,23 +54,20 @@
     background: color-mix(in oklab, var(--bg) 78%, transparent);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border-top: 1px solid var(--border-soft);
-    padding: 0 var(--nav-pad);
-    /* iOS reports ~34px for the home-indicator safe area, which is more
-       visual clearance than the OS actually needs. Subtract a chunk so
-       tabs sit just above the indicator line, not floating high above
-       it. On devices without an indicator (Mac, iPad), the max() clamp
-       gives a sensible minimum. */
-    padding-bottom: max(var(--space-3xs), calc(var(--safe-bottom) - 18px));
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-2);
+    padding: var(--space-3xs) var(--nav-pad);
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    /* Float over the content on mobile so backdrop-filter has
-       something to blur (the .tab-page reserves matching padding). */
+    /* Floating island: detached from the screen edges with margins on
+       three sides. The home-indicator safe area sits below the nav,
+       not inside it, so we don't need internal padding for clearance. */
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: var(--space-sm);
+    right: var(--space-sm);
+    bottom: max(var(--space-2xs), var(--safe-bottom));
+    box-shadow: var(--shadow-elev-2);
     z-index: 50;
   }
 
@@ -162,8 +159,9 @@
       position: static;
       flex-direction: column;
       align-items: stretch;
-      border-top: none;
+      border: none;
       border-right: 1px solid var(--border-soft);
+      border-radius: 0;
       padding: var(--space-lg) var(--space-md);
       gap: var(--space-2xl);
       width: var(--nav-width-desktop);
@@ -171,6 +169,7 @@
       background: var(--bg);
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
+      box-shadow: none;
     }
     .wordmark {
       display: block;

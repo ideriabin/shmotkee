@@ -762,7 +762,8 @@
   .fab {
     position: fixed;
     right: var(--space-md);
-    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md));
+    /* Clear the floating nav (visual height + bottom gap) + breathing space. */
+    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md) + var(--space-2xs));
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -796,7 +797,7 @@
     position: fixed;
     left: var(--space-sm);
     right: var(--space-sm);
-    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-sm));
+    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-sm) + var(--space-2xs));
     background: var(--surface-3);
     color: var(--text);
     border: 1px solid var(--border);
