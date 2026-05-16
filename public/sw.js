@@ -1,36 +1,76 @@
 /*
- * Minimal service worker — caches the app shell so the PWA opens offline
- * after first visit. Data (items, sessions, outfits) lives in IndexedDB
- * and is untouched by this SW.
+ * Service worker for Shmotkee.
+ *
+ * Strategy:
+ *   - Navigations (HTML) → network-first. Always grab the freshest
+ *     index.html when online; fall back to cache only when offline.
+ *     This is non-negotiable: index.html references content-hashed
+ *     asset filenames, so a stale cached HTML points to dead assets.
+ *   - Same-origin assets → cache-first. Asset URLs already contain a
+ *     content hash, so a cached response is always valid.
+ *   - All other (cross-origin) → pass through.
+ *
+ * On activate, delete every previous cache regardless of name to clear
+ * out anything left behind by older SW versions.
+ *
+ * Bump VERSION when changing strategy itself (not on every deploy —
+ * the cache stays valid across deploys thanks to content hashes).
  */
 
-const SHELL_VERSION = 'shell-v1';
+const VERSION = 'shmotkee-v3';
+const RUNTIME = `${VERSION}-runtime`;
 
-// Relative paths resolve against the SW's URL — so on GitHub Pages where
-// the SW lives at /shmotkee/sw.js, './' is /shmotkee/, etc.
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(SHELL_VERSION)
-      .then((cache) => cache.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg'])),
-  );
+self.addEventListener('install', () => {
+  // No precache. Runtime requests populate the cache as needed.
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== SHELL_VERSION).map((k) => caches.delete(k))),
-    ),
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== RUNTIME).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })(),
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Navigations: network-first.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const response = await fetch(request);
+          const copy = response.clone();
+          caches.open(RUNTIME).then((c) => c.put(request, copy)).catch(() => {});
+          return response;
+        } catch {
+          const cache = await caches.open(RUNTIME);
+          const hit = (await cache.match(request)) || (await cache.match('./'));
+          return hit ?? new Response('Offline', { status: 503 });
+        }
+      })(),
+    );
+    return;
+  }
+
+  // Same-origin static assets: cache-first.
   event.respondWith(
-    caches.match(event.request).then((hit) => hit || fetch(event.request)),
+    (async () => {
+      const cache = await caches.open(RUNTIME);
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      const response = await fetch(request);
+      if (response.ok && response.type !== 'opaque') {
+        cache.put(request, response.clone()).catch(() => {});
+      }
+      return response;
+    })(),
   );
 });
