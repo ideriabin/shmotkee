@@ -358,7 +358,10 @@
   {/if}
 
   {#if showUpload}
-    <UploadSheet onClose={() => (showUpload = false)} />
+    <UploadSheet
+      onClose={() => (showUpload = false)}
+      defaultSlot={filter === 'all' || filter === 'unclassified' ? null : filter}
+    />
   {/if}
 
   {#if detailItem}

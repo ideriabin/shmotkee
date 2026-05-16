@@ -1,9 +1,13 @@
 <script lang="ts">
   import { X, FolderOpen, FileImage } from 'lucide-svelte';
   import { createItem } from '../db/items';
+  import { SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
   import { generateThumbnail, filenameStem } from './thumbnail';
 
-  let { onClose }: { onClose: () => void } = $props();
+  let {
+    onClose,
+    defaultSlot = null,
+  }: { onClose: () => void; defaultSlot?: SlotKey | null } = $props();
 
   type Step = 'source' | 'importing' | 'done';
 
@@ -66,7 +70,7 @@
         const thumb = await generateThumbnail(file);
         await createItem({
           name: filenameStem(file.name),
-          slot: null,
+          slot: defaultSlot,
           blob: file,
           thumbnail: thumb,
         });
@@ -99,7 +103,13 @@
   <div class="sheet" role="document">
     <header class="sheet-head">
       <h2 id="upload-title" class="sheet-title">
-        {#if step === 'source'}Добавить{:else if step === 'importing'}Загружаю{:else}Готово{/if}
+        {#if step === 'source'}
+          Добавить{#if defaultSlot}<span class="sheet-title-suffix"> в {SLOT_LABEL_RU[defaultSlot]}</span>{/if}
+        {:else if step === 'importing'}
+          Загружаю
+        {:else}
+          Готово
+        {/if}
       </h2>
       <button class="icon-btn" type="button" aria-label="Закрыть" onclick={close}>
         <X size={20} strokeWidth={1.6} aria-hidden="true" />
@@ -161,9 +171,15 @@
               <br />Не получилось: <strong>{failedCount}</strong>
             {/if}
           </p>
-          <p class="done-hint">
-            Все вещи помечены «Без слота». В гардеробе можно выделить нужные и разложить по категориям.
-          </p>
+          {#if defaultSlot}
+            <p class="done-hint">
+              Вещи добавлены в «{SLOT_LABEL_RU[defaultSlot]}».
+            </p>
+          {:else}
+            <p class="done-hint">
+              Все вещи помечены «Без слота». В гардеробе можно выделить нужные и разложить по категориям.
+            </p>
+          {/if}
           <button class="primary" type="button" onclick={close}>Хорошо</button>
         </div>
       {/if}
@@ -208,6 +224,10 @@
     font-size: var(--text-2xl);
     color: var(--text);
     line-height: 1;
+  }
+  .sheet-title-suffix {
+    color: var(--text-muted);
+    font-size: var(--text-xl);
   }
 
   .icon-btn {
