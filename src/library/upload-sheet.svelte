@@ -105,6 +105,7 @@
   }}
 >
   <div class="sheet" class:closing role="document">
+    <span class="grabber" aria-hidden="true"></span>
     <header class="sheet-head">
       <h2 id="upload-title" class="sheet-title">
         {#if step === 'source'}
@@ -204,16 +205,32 @@
   }
 
   .sheet {
+    position: relative;
     background: var(--surface);
     width: 100%;
     max-width: 560px;
     border-top: 1px solid var(--border);
     border-radius: var(--radius-2) var(--radius-2) 0 0;
     padding: var(--space-md);
+    padding-top: calc(var(--space-md) + 18px); /* room for grabber */
     padding-bottom: calc(var(--space-md) + var(--safe-bottom));
     animation: slide-up var(--dur-medium) var(--ease-out-expo);
     max-height: 85dvh;
     overflow-y: auto;
+  }
+
+  /* iOS-style drag indicator at the top of the sheet — pure visual
+     affordance, not actually draggable (yet). */
+  .grabber {
+    position: absolute;
+    top: var(--space-2xs);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 5px;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+    pointer-events: none;
   }
 
   .sheet-head {

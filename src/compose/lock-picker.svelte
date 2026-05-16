@@ -50,101 +50,97 @@
   }
 </script>
 
-<div
-  class="overlay"
-  class:closing
-  role="dialog"
-  aria-modal="true"
-  onclick={(e) => {
-    if (e.target === e.currentTarget) requestClose();
-  }}
->
-  <div class="sheet" class:closing>
-    <header class="sheet-head">
-      <h2 class="sheet-title">Закрепить вещи</h2>
-      <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
-        <X size={20} strokeWidth={1.6} aria-hidden="true" />
+<div class="picker" class:closing role="dialog" aria-modal="true">
+  <header class="top-bar">
+    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
+      <X size={22} strokeWidth={1.6} aria-hidden="true" />
+    </button>
+    <h2 class="top-title">Закрепить вещи</h2>
+    <span class="top-spacer"></span>
+  </header>
+
+  <div class="filters" role="tablist">
+    <button class="filter" class:active={filter === 'all'} onclick={() => (filter = 'all')}>Все</button>
+    {#each SLOT_KEYS as slot (slot)}
+      <button class="filter" class:active={filter === slot} onclick={() => (filter = slot)}>
+        {SLOT_LABEL_RU[slot]}
       </button>
-    </header>
-
-    <div class="filters">
-      <button class="filter" class:active={filter === 'all'} onclick={() => (filter = 'all')}>Все</button>
-      {#each SLOT_KEYS as slot (slot)}
-        <button class="filter" class:active={filter === slot} onclick={() => (filter = slot)}>
-          {SLOT_LABEL_RU[slot]}
-        </button>
-      {/each}
-    </div>
-
-    <ul class="grid">
-      {#each filtered as item (item.id)}
-        <li>
-          <button
-            type="button"
-            class="tile"
-            class:selected={selectedIds.has(item.id)}
-            onclick={() => toggle(item.id)}
-            aria-pressed={selectedIds.has(item.id)}
-          >
-            <div class="tile-photo">
-              <Thumb blob={item.thumbnail ?? item.blob} alt={item.name} />
-              {#if selectedIds.has(item.id)}
-                <div class="check"><Check size={18} strokeWidth={2.4} aria-hidden="true" /></div>
-              {/if}
-            </div>
-            <p class="tile-name">{item.name}</p>
-          </button>
-        </li>
-      {/each}
-    </ul>
-
-    <footer class="sheet-foot">
-      <span class="count">Выбрано: <strong>{selectedIds.size}</strong></span>
-      <button class="primary" type="button" onclick={confirm}>Закрепить</button>
-    </footer>
+    {/each}
   </div>
+
+  <ul class="grid">
+    {#each filtered as item (item.id)}
+      <li>
+        <button
+          type="button"
+          class="tile"
+          class:selected={selectedIds.has(item.id)}
+          onclick={() => toggle(item.id)}
+          aria-pressed={selectedIds.has(item.id)}
+        >
+          <div class="tile-photo">
+            <Thumb blob={item.thumbnail ?? item.blob} alt={item.name} />
+            {#if selectedIds.has(item.id)}
+              <div class="check"><Check size={18} strokeWidth={2.4} aria-hidden="true" /></div>
+            {/if}
+          </div>
+          <p class="tile-name">{item.name}</p>
+        </button>
+      </li>
+    {/each}
+  </ul>
+
+  <footer class="bottom-bar">
+    <span class="count">Выбрано: <strong>{selectedIds.size}</strong></span>
+    <button class="primary" type="button" onclick={confirm}>Закрепить</button>
+  </footer>
 </div>
 
 <style>
-  .overlay {
+  .picker {
     position: fixed;
     inset: 0;
-    background: var(--scrim);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 200;
-    animation: fade-in var(--dur-base) var(--ease-out);
-  }
-  .sheet {
-    background: var(--surface);
-    width: 100%;
-    max-width: 760px;
-    border-top: 1px solid var(--border);
-    border-radius: var(--radius-2) var(--radius-2) 0 0;
-    padding: var(--space-md);
-    padding-bottom: calc(var(--space-md) + var(--safe-bottom));
-    max-height: 92dvh;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
-    animation: slide-up var(--dur-medium) var(--ease-out-expo);
+    z-index: 200;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    animation: picker-in var(--dur-medium) var(--ease-out-expo);
+  }
+  .picker.closing {
+    animation: picker-out var(--dur-base) var(--ease-out) forwards;
+  }
+  @keyframes picker-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes picker-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(8px); }
   }
 
-  .sheet-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: var(--space-sm);
+  .top-bar {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    border-bottom: 1px solid var(--border-soft);
   }
-  .sheet-title {
+  .top-title {
+    text-align: center;
     font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-size: var(--text-lg);
     color: var(--text);
     line-height: 1;
+    margin: 0;
   }
+  .top-spacer { display: block; }
+
   .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: grid;
     place-items: center;
     color: var(--text-muted);
@@ -152,28 +148,36 @@
     transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
   @media (hover: hover) {
-    .icon-btn:hover { color: var(--text); }
+    .icon-btn:hover { color: var(--text); background: var(--surface); }
   }
   .icon-btn:active {
     transform: scale(0.9);
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--text);
     transition-duration: 60ms;
   }
 
+  /* Filter strip — horizontal scroll like the library, never wraps. */
   .filters {
     display: flex;
-    flex-wrap: wrap;
     gap: var(--space-3xs);
-    margin-bottom: var(--space-sm);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: var(--space-2xs) var(--space-md);
+    -webkit-overflow-scrolling: touch;
   }
+  .filters::-webkit-scrollbar { display: none; }
   .filter {
     padding: var(--space-3xs) var(--space-xs);
     border-radius: var(--radius-pill);
     border: 1px solid var(--border-soft);
     color: var(--text-soft);
     font-size: var(--text-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: all var(--dur-quick) var(--ease-out);
+    background: transparent;
   }
   .filter.active {
     background: var(--text);
@@ -186,15 +190,20 @@
     gap: var(--space-2xs);
     grid-template-columns: repeat(3, 1fr);
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     flex: 1;
     min-height: 0;
-    padding-bottom: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    -webkit-overflow-scrolling: touch;
   }
   @media (min-width: 600px) {
-    .grid { grid-template-columns: repeat(4, 1fr); }
+    .grid { grid-template-columns: repeat(4, 1fr); gap: var(--space-sm); }
   }
   @media (min-width: 900px) {
     .grid { grid-template-columns: repeat(5, 1fr); }
+  }
+  @media (min-width: 1200px) {
+    .grid { grid-template-columns: repeat(6, 1fr); }
   }
 
   .tile {
@@ -202,6 +211,12 @@
     text-align: left;
     border-radius: var(--radius-2);
     overflow: hidden;
+    touch-action: manipulation;
+    transition: transform var(--dur-quick) var(--ease-out);
+  }
+  .tile:active {
+    transform: scale(0.97);
+    transition-duration: 60ms;
   }
   .tile-photo {
     background: var(--tile);
@@ -212,6 +227,9 @@
     outline: 2px solid transparent;
     outline-offset: -2px;
     border-radius: var(--radius-2);
+  }
+  .tile-photo :global(img) {
+    pointer-events: none;
   }
   .tile.selected .tile-photo {
     outline-color: var(--accent);
@@ -239,13 +257,14 @@
     line-clamp: 1;
   }
 
-  .sheet-foot {
+  .bottom-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
     border-top: 1px solid var(--border-soft);
     gap: var(--space-sm);
+    background: var(--surface);
   }
   .count {
     color: var(--text-muted);
@@ -273,13 +292,7 @@
     transition-duration: 60ms;
   }
 
-  @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
-  @keyframes fade-out { from { opacity: 1 } to { opacity: 0 } }
-  @keyframes slide-up { from { transform: translateY(100%) } to { transform: translateY(0) } }
-  @keyframes slide-down { from { transform: translateY(0) } to { transform: translateY(100%) } }
-  .overlay.closing { animation: fade-out var(--dur-base) var(--ease-out) forwards; }
-  .sheet.closing { animation: slide-down var(--dur-base) var(--ease-out) forwards; }
   @media (prefers-reduced-motion: reduce) {
-    .overlay, .sheet { animation: none; }
+    .picker, .picker.closing { animation: none; }
   }
 </style>

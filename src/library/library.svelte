@@ -384,15 +384,22 @@
   {/if}
 
   {#if showDeleteConfirm}
-    <div class="modal" role="alertdialog">
-      <div class="modal-card">
-        <p class="modal-title display">Удалить {confirmDeleteCount} {plural(confirmDeleteCount, ITEMS)}?</p>
-        <p class="modal-hint">Действие нельзя отменить. Эти вещи также пропадут из всех сохранённых образов.</p>
-        <div class="modal-actions">
-          <button type="button" class="modal-ghost" onclick={() => (showDeleteConfirm = false)}>отмена</button>
-          <button type="button" class="modal-destructive" onclick={batchDelete}>удалить</button>
-        </div>
+    <div
+      class="action-overlay"
+      role="alertdialog"
+      onclick={(e) => {
+        if (e.target === e.currentTarget) showDeleteConfirm = false;
+      }}
+    >
+      <div class="action-sheet">
+        <p class="action-text">
+          Удалить <strong>{confirmDeleteCount}</strong> {plural(confirmDeleteCount, ITEMS)}? Вещи также пропадут из всех сохранённых образов.
+        </p>
+        <button type="button" class="action-destructive" onclick={batchDelete}>Удалить</button>
       </div>
+      <button type="button" class="action-cancel" onclick={() => (showDeleteConfirm = false)}>
+        Отмена
+      </button>
     </div>
   {/if}
 </section>
@@ -833,69 +840,5 @@
     .toast, .toast.closing { animation: none; }
   }
 
-  /* Bulk-delete confirm modal */
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: var(--scrim-strong);
-    display: grid;
-    place-items: center;
-    padding: var(--space-md);
-    z-index: 400;
-  }
-  .modal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    padding: var(--space-md);
-    max-width: 380px;
-    width: 100%;
-  }
-  .modal-title {
-    font-size: var(--text-2xl);
-    color: var(--text);
-    line-height: 1.1;
-    margin-bottom: var(--space-2xs);
-  }
-  .modal-hint {
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    line-height: var(--lh-snug);
-    margin-bottom: var(--space-md);
-  }
-  .modal-actions {
-    display: flex;
-    gap: var(--space-2xs);
-    justify-content: flex-end;
-  }
-  .modal-ghost {
-    padding: var(--space-2xs) var(--space-sm);
-    color: var(--text-muted);
-    border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .modal-ghost:hover { color: var(--text); }
-  }
-  .modal-ghost:active {
-    color: var(--text);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
-  .modal-destructive {
-    background: var(--accent);
-    color: var(--accent-on);
-    padding: var(--space-2xs) var(--space-sm);
-    border-radius: var(--radius-2);
-    font-weight: var(--w-medium);
-    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .modal-destructive:hover { background: var(--accent-hover); }
-  }
-  .modal-destructive:active {
-    background: var(--accent-hover);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
+  /* Bulk-delete confirm uses the global .action-* action sheet styles. */
 </style>

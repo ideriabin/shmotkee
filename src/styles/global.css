@@ -115,3 +115,95 @@ ol {
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+/* ─── iOS-style action sheets ─────────────────────────────────────
+   Shared across every confirm/destructive prompt in the app. The
+   markup is:
+     <div class="action-overlay" role="alertdialog">
+       <div class="action-sheet">
+         <p class="action-text">Prompt copy</p>
+         <button class="action-destructive">Destructive verb</button>
+       </div>
+       <button class="action-cancel">Отмена</button>
+     </div>
+   The cancel button sits below the card with a small gap, matching
+   the native iOS action-sheet visual grammar. */
+.action-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+  padding: var(--space-sm);
+  padding-bottom: calc(var(--space-sm) + var(--safe-bottom));
+  z-index: 500;
+  animation: action-overlay-in var(--dur-base) var(--ease-out);
+}
+
+.action-sheet,
+.action-cancel {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  animation: action-rise var(--dur-medium) var(--ease-out-expo);
+}
+
+.action-text {
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: var(--lh-snug);
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+}
+.action-text strong {
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+
+.action-destructive,
+.action-cancel {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface);
+  font-size: var(--text-lg);
+  font-weight: var(--w-medium);
+  text-align: center;
+  transition: background var(--dur-quick) var(--ease-out);
+}
+.action-destructive {
+  color: var(--accent);
+}
+.action-cancel {
+  color: var(--text);
+}
+
+@media (hover: hover) {
+  .action-destructive:hover,
+  .action-cancel:hover {
+    background: var(--surface-2);
+  }
+}
+.action-destructive:active,
+.action-cancel:active {
+  background: var(--surface-2);
+  transition-duration: 60ms;
+}
+
+@keyframes action-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes action-rise {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-overlay, .action-sheet, .action-cancel { animation: none; }
+}

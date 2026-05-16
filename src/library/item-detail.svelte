@@ -56,23 +56,18 @@
   }
 </script>
 
-<div
-  class="overlay"
-  class:closing
-  role="dialog"
-  aria-modal="true"
-  onclick={(e) => {
-    if (e.target === e.currentTarget) requestClose();
-  }}
->
-  <div class="sheet" class:closing>
-    <header class="sheet-head">
-      <h2 class="sheet-title">Вещь</h2>
-      <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
-        <X size={20} strokeWidth={1.6} aria-hidden="true" />
-      </button>
-    </header>
+<div class="detail" class:closing role="dialog" aria-modal="true">
+  <header class="top-bar">
+    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
+      <X size={22} strokeWidth={1.6} aria-hidden="true" />
+    </button>
+    <h2 class="top-title">Вещь</h2>
+    <button class="icon-btn" type="button" aria-label="Удалить" onclick={askDelete}>
+      <Trash2 size={20} strokeWidth={1.5} aria-hidden="true" />
+    </button>
+  </header>
 
+  <div class="body">
     <div class="preview">
       <Thumb blob={item.blob} alt={item.name} />
     </div>
@@ -120,20 +115,19 @@
           <span class="z-hint">меньше — назад · больше — наперёд</span>
         </div>
       </div>
-
-      <div class="danger-zone">
-        <button class="destructive" type="button" onclick={askDelete}>
-          <Trash2 size={18} strokeWidth={1.5} aria-hidden="true" />
-          <span>Удалить вещь</span>
-        </button>
-      </div>
     </div>
   </div>
 
   {#if confirmDelete}
-    <div class="confirm" role="alertdialog">
-      <div class="confirm-card">
-        <p class="confirm-text">
+    <div
+      class="action-overlay"
+      role="alertdialog"
+      onclick={(e) => {
+        if (e.target === e.currentTarget) confirmDelete = false;
+      }}
+    >
+      <div class="action-sheet">
+        <p class="action-text">
           {#if outfitsUsing > 0}
             Удалить «{item.name}»? Эта вещь в <strong>{outfitsUsing}</strong>
             {outfitsUsing === 1 ? 'образе' : outfitsUsing < 5 ? 'образах' : 'образах'}.
@@ -141,55 +135,61 @@
             Удалить «{item.name}»?
           {/if}
         </p>
-        <div class="confirm-actions">
-          <button type="button" class="ghost" onclick={() => (confirmDelete = false)}>Отмена</button>
-          <button type="button" class="destructive-solid" onclick={doDelete}>Удалить</button>
-        </div>
+        <button type="button" class="action-destructive" onclick={doDelete}>Удалить</button>
       </div>
+      <button type="button" class="action-cancel" onclick={() => (confirmDelete = false)}>
+        Отмена
+      </button>
     </div>
   {/if}
 </div>
 
 <style>
-  .overlay {
+  /* Fullscreen view — same pattern as triage/tinder. No scrolling
+     unless the form is taller than viewport (rare). Photo + form lay
+     out at native scale instead of inside a scrolling sheet. */
+  .detail {
     position: fixed;
     inset: 0;
-    background: var(--scrim);
+    background: var(--bg);
     display: flex;
-    align-items: flex-end;
-    justify-content: center;
+    flex-direction: column;
     z-index: 200;
-    animation: fade-in var(--dur-base) var(--ease-out);
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    animation: detail-in var(--dur-medium) var(--ease-out-expo);
+  }
+  .detail.closing {
+    animation: detail-out var(--dur-base) var(--ease-out) forwards;
+  }
+  @keyframes detail-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes detail-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(8px); }
   }
 
-  .sheet {
-    background: var(--surface);
-    width: 100%;
-    max-width: 560px;
-    border-top: 1px solid var(--border);
-    border-radius: var(--radius-2) var(--radius-2) 0 0;
-    padding: var(--space-md);
-    padding-bottom: calc(var(--space-md) + var(--safe-bottom));
-    max-height: 92dvh;
-    overflow-y: auto;
-    animation: slide-up var(--dur-medium) var(--ease-out-expo);
+  .top-bar {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    border-bottom: 1px solid var(--border-soft);
   }
-
-  .sheet-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: var(--space-md);
-  }
-  .sheet-title {
+  .top-title {
+    text-align: center;
     font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-size: var(--text-lg);
     color: var(--text);
     line-height: 1;
+    margin: 0;
   }
   .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: grid;
     place-items: center;
     color: var(--text-muted);
@@ -199,22 +199,41 @@
   @media (hover: hover) {
     .icon-btn:hover {
       color: var(--text);
+      background: var(--surface);
     }
   }
   .icon-btn:active {
     transform: scale(0.9);
-    background: var(--surface-2);
+    background: var(--surface);
     color: var(--text);
     transition-duration: 60ms;
   }
 
+  .body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding: var(--space-md);
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Photo claims the upper portion but is bounded so the form is
+     always at least partially visible at first sight on phone.
+     aspect-ratio with max-height auto-resolves width — the box
+     never exceeds 40dvh tall AND keeps a 4:5 portrait silhouette. */
   .preview {
     background: var(--tile);
     border: 1px solid var(--border-soft);
-    aspect-ratio: 4 / 5;
-    padding: var(--space-md);
-    margin-bottom: var(--space-md);
     border-radius: var(--radius-2);
+    aspect-ratio: 4 / 5;
+    max-height: 40dvh;
+    max-width: 100%;
+    padding: var(--space-md);
+    margin: 0 auto var(--space-md);
   }
 
   .form {
@@ -309,105 +328,9 @@
     font-size: var(--text-sm);
   }
 
-  .danger-zone {
-    margin-top: var(--space-md);
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--border-soft);
-  }
-  .destructive {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2xs);
-    color: var(--accent);
-    padding: var(--space-2xs) 0;
-    transition: opacity var(--dur-quick) var(--ease-out);
-  }
-  .destructive:hover {
-    opacity: 0.8;
-  }
+  /* Action-sheet styles live in global.css. */
 
-  .confirm {
-    position: fixed;
-    inset: 0;
-    background: var(--scrim-strong);
-    display: grid;
-    place-items: center;
-    z-index: 300;
-    padding: var(--space-md);
-  }
-  .confirm-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    padding: var(--space-md);
-    max-width: 380px;
-    width: 100%;
-  }
-  .confirm-text {
-    font-size: var(--text-lg);
-    color: var(--text);
-    margin-bottom: var(--space-md);
-    line-height: var(--lh-snug);
-  }
-  .confirm-actions {
-    display: flex;
-    gap: var(--space-2xs);
-    justify-content: flex-end;
-  }
-  .ghost {
-    padding: var(--space-2xs) var(--space-sm);
-    color: var(--text-muted);
-    border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .ghost:hover { color: var(--text); }
-  }
-  .ghost:active {
-    color: var(--text);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
-  .destructive-solid {
-    background: var(--accent);
-    color: var(--accent-on);
-    padding: var(--space-2xs) var(--space-sm);
-    border-radius: var(--radius-2);
-    font-weight: var(--w-medium);
-    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .destructive-solid:hover { background: var(--accent-hover); }
-  }
-  .destructive-solid:active {
-    background: var(--accent-hover);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-  @keyframes slide-up {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-  @keyframes slide-down {
-    from { transform: translateY(0); }
-    to { transform: translateY(100%); }
-  }
-  .overlay.closing {
-    animation: fade-out var(--dur-base) var(--ease-out) forwards;
-  }
-  .sheet.closing {
-    animation: slide-down var(--dur-base) var(--ease-out) forwards;
-  }
   @media (prefers-reduced-motion: reduce) {
-    .overlay, .sheet { animation: none; }
+    .detail, .detail.closing { animation: none; }
   }
 </style>

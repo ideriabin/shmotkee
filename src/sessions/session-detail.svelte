@@ -225,28 +225,45 @@
   {/if}
 
   {#if showPostExport}
-    <div class="modal" role="alertdialog">
-      <div class="modal-card">
-        <p class="modal-text">Сохранено. Удалить сессию?</p>
-        <p class="modal-hint">Сессии — рабочее пространство; можно очистить.</p>
-        <div class="modal-actions">
-          <button type="button" class="ghost" onclick={() => (showPostExport = false)}>оставить</button>
-          <button type="button" class="primary" onclick={() => { showPostExport = false; deleteThisSession(); }}>удалить</button>
-        </div>
+    <div
+      class="action-overlay"
+      role="alertdialog"
+      onclick={(e) => {
+        if (e.target === e.currentTarget) showPostExport = false;
+      }}
+    >
+      <div class="action-sheet">
+        <p class="action-text">Сохранено. Удалить сессию?</p>
+        <button type="button" class="action-destructive" onclick={() => { showPostExport = false; deleteThisSession(); }}>
+          Удалить
+        </button>
       </div>
+      <button type="button" class="action-cancel" onclick={() => (showPostExport = false)}>
+        Оставить
+      </button>
     </div>
   {/if}
 
   {#if showDeleteConfirm}
-    <div class="modal" role="alertdialog">
-      <div class="modal-card">
-        <p class="modal-text">Удалить «{session.name}»?</p>
-        <p class="modal-hint">Все {outfits.length} {plural(outfits.length, OUTFITS)} в этой сессии тоже удалятся.</p>
-        <div class="modal-actions">
-          <button type="button" class="ghost" onclick={() => (showDeleteConfirm = false)}>отмена</button>
-          <button type="button" class="primary" onclick={() => { showDeleteConfirm = false; deleteThisSession(); }}>удалить</button>
-        </div>
+    <div
+      class="action-overlay"
+      role="alertdialog"
+      onclick={(e) => {
+        if (e.target === e.currentTarget) showDeleteConfirm = false;
+      }}
+    >
+      <div class="action-sheet">
+        <p class="action-text">
+          Удалить «{session.name}»? Все <strong>{outfits.length}</strong>
+          {plural(outfits.length, OUTFITS)} в сессии тоже удалятся.
+        </p>
+        <button type="button" class="action-destructive" onclick={() => { showDeleteConfirm = false; deleteThisSession(); }}>
+          Удалить
+        </button>
       </div>
+      <button type="button" class="action-cancel" onclick={() => (showDeleteConfirm = false)}>
+        Отмена
+      </button>
     </div>
   {/if}
 </section>
@@ -473,67 +490,5 @@
     color: var(--accent);
   }
 
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: var(--scrim-strong);
-    display: grid;
-    place-items: center;
-    padding: var(--space-md);
-    z-index: 400;
-  }
-  .modal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-2);
-    padding: var(--space-md);
-    max-width: 380px;
-    width: 100%;
-  }
-  .modal-text {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
-    color: var(--text);
-    line-height: 1.1;
-    margin-bottom: var(--space-2xs);
-  }
-  .modal-hint {
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    margin-bottom: var(--space-md);
-  }
-  .modal-actions {
-    display: flex;
-    gap: var(--space-2xs);
-    justify-content: flex-end;
-  }
-  .ghost {
-    padding: var(--space-2xs) var(--space-sm);
-    color: var(--text-muted);
-    border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .ghost:hover { color: var(--text); }
-  }
-  .ghost:active {
-    color: var(--text);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
-  .primary {
-    background: var(--accent);
-    color: var(--accent-on);
-    padding: var(--space-2xs) var(--space-sm);
-    border-radius: var(--radius-2);
-    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-  }
-  @media (hover: hover) {
-    .primary:hover { background: var(--accent-hover); }
-  }
-  .primary:active {
-    background: var(--accent-hover);
-    transform: scale(0.96);
-    transition-duration: 60ms;
-  }
+  /* Delete confirms use the global .action-* action-sheet styles. */
 </style>
