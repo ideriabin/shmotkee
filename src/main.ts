@@ -7,6 +7,19 @@ const app = mount(App, {
   target: document.getElementById('app')!,
 });
 
+// Fade out the inline splash once the app has mounted. requestAnimationFrame
+// gives Svelte a tick to paint the first frame so the cross-fade is to
+// something, not from-burgundy-to-blank.
+const splash = document.getElementById('splash');
+if (splash) {
+  requestAnimationFrame(() => {
+    splash.classList.add('fade');
+    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+    // Safety: remove after a generous timeout even if transitionend never fires.
+    setTimeout(() => splash.remove(), 1200);
+  });
+}
+
 // Dev-only fixture seeder. Call `window.__seedFixtures()` from devtools or
 // Playwright to populate the library with synthetic items for visual testing.
 if (import.meta.env.DEV) {

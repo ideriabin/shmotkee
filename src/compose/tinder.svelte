@@ -116,21 +116,35 @@
     onpointercancel={onPointerUp}
   >
     {#if current}
-      <div
-        class="card"
-        class:dragging
-        class:leaving-left={leaving === 'left'}
-        class:leaving-right={leaving === 'right'}
-        class:entering
-        style:transform={dragging
-          ? `translateX(${dragX}px) rotate(${angle}deg)`
-          : ''}
-      >
-        <Preview combo={current} accent />
-        <div class="tint nope" style:opacity={Math.max(0, -tint)}></div>
-        <div class="tint yes" style:opacity={Math.max(0, tint)}></div>
-        <div class="badge nope-badge" style:opacity={Math.max(0, -tint)}>хуйня</div>
-        <div class="badge yes-badge" style:opacity={Math.max(0, tint)}>заебись</div>
+      {@const next1 = composeState.results[composeState.tinderIndex + 1]}
+      {@const next2 = composeState.results[composeState.tinderIndex + 2]}
+      <div class="deck">
+        {#if next2}
+          <div class="card card-back card-back-2">
+            <Preview combo={next2} accent />
+          </div>
+        {/if}
+        {#if next1}
+          <div class="card card-back card-back-1">
+            <Preview combo={next1} accent />
+          </div>
+        {/if}
+        <div
+          class="card card-active"
+          class:dragging
+          class:leaving-left={leaving === 'left'}
+          class:leaving-right={leaving === 'right'}
+          class:entering
+          style:transform={dragging
+            ? `translateX(${dragX}px) rotate(${angle}deg)`
+            : ''}
+        >
+          <Preview combo={current} accent />
+          <div class="tint nope" style:opacity={Math.max(0, -tint)}></div>
+          <div class="tint yes" style:opacity={Math.max(0, tint)}></div>
+          <div class="badge nope-badge" style:opacity={Math.max(0, -tint)}>хуйня</div>
+          <div class="badge yes-badge" style:opacity={Math.max(0, tint)}>заебись</div>
+        </div>
       </div>
     {:else if composeState.exhausted}
       <div class="empty">
@@ -240,14 +254,41 @@
     -webkit-user-select: none;
   }
 
-  .card {
+  /* The deck holds the active card + 2 peek-cards behind it. Active
+     card claims the deck's box; back cards are positioned absolute
+     inside the deck with translated/scaled transforms so they
+     "peek" from behind. Stack pattern: classic Tinder. */
+  .deck {
     position: relative;
     width: min(100%, 540px);
     aspect-ratio: 4 / 5;
-    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .card {
+    position: absolute;
+    inset: 0;
+    transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
     cursor: grab;
     will-change: transform;
     touch-action: none;
+  }
+  .card.card-active {
+    z-index: 2;
+  }
+  .card.card-back {
+    pointer-events: none;
+  }
+  /* Back cards lean slightly left/right with rotation — the "scattered
+     deck" look. Without the offset+rotation, center-origin scale leaves
+     them fully hidden behind the active card. */
+  .card.card-back-1 {
+    transform: translate(-8px, 10px) rotate(-2.5deg) scale(0.96);
+    opacity: 0.55;
+    z-index: 1;
+  }
+  .card.card-back-2 {
+    transform: translate(8px, 20px) rotate(2.5deg) scale(0.92);
+    opacity: 0.28;
+    z-index: 0;
   }
   /* While the finger is down, kill the transition so the card tracks
      1:1 with movement (no easing = no shake). On release we re-enable

@@ -226,7 +226,7 @@
           <X size={22} strokeWidth={1.6} aria-hidden="true" />
         </button>
         <h1 class="title title-select">
-          <span class="display title-strong">{selectedIds.size}</span>
+          <span class="title-strong">{selectedIds.size}</span>
           <span class="title-meta">выбрано</span>
         </h1>
         <button class="title-icon-btn" type="button" aria-label="Выбрать все" onclick={selectAllVisible}>
@@ -234,7 +234,7 @@
         </button>
       {:else}
         <h1 class="title">
-          <span class="display title-strong">Гардероб</span>
+          <span class="title-strong">Гардероб</span>
           <span class="title-count">{items.length}</span>
         </h1>
       {/if}
@@ -355,8 +355,6 @@
                 <span class="check" aria-hidden="true">✓</span>
               {/if}
             </div>
-            <p class="tile-name" title={item.name}>{item.name}</p>
-            <p class="tile-meta">{item.slot ? SLOT_LABEL_RU[item.slot] : 'без слота'}</p>
           </button>
         </li>
       {/each}
@@ -417,8 +415,8 @@
 
 <style>
   .page {
-    --hero-pad: var(--space-md);
-    padding: var(--space-md) var(--hero-pad);
+    --hero-pad: var(--space-sm);
+    padding: var(--space-sm) var(--hero-pad);
     padding-bottom: var(--space-3xl);
     max-width: var(--content-max);
     margin: 0 auto;
@@ -426,16 +424,16 @@
   }
 
   .hero {
-    margin-bottom: var(--space-sm);
+    margin-bottom: var(--space-2xs);
   }
 
-  /* Title row stays the same height between idle and selection mode so
-     the page below doesn't jump when entering/leaving selection. */
+  /* Compact app-bar style title — small, single row, leaves the
+     vertical space to the photo grid. */
   .title-row {
     display: flex;
     align-items: center;
     gap: var(--space-2xs);
-    min-height: 40px;
+    min-height: 36px;
     margin-bottom: var(--space-2xs);
   }
   .title {
@@ -447,21 +445,21 @@
     min-width: 0;
   }
   .title-select {
-    /* Bigger gap between count and label */
     gap: var(--space-3xs);
   }
   .title-strong {
     font-family: var(--font-display);
-    font-size: var(--text-3xl);
+    font-size: var(--text-xl);
     color: var(--text);
     line-height: 1;
     letter-spacing: var(--track-tight);
   }
   .title-count {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
   .title-meta {
     font-size: var(--text-xs);
@@ -611,11 +609,14 @@
     border-radius: var(--radius-pill);
   }
 
-  /* ─── grid ─── */
+  /* ─── grid ─── Photos.app style: edge-to-edge, very tight gaps,
+     images carry the page. The grid breaks out of .page padding via
+     negative side margins so it spans full viewport width. */
   .grid {
     display: grid;
-    gap: var(--space-xs);
+    gap: 2px;
     grid-template-columns: repeat(3, 1fr);
+    margin: 0 calc(-1 * var(--hero-pad));
   }
   /* Items leaving the filter are hidden via display:none, not unmounted —
      keeps each Thumb's objectURL alive across filter changes. */
@@ -623,10 +624,10 @@
     display: none;
   }
   @media (min-width: 600px) {
-    .grid { grid-template-columns: repeat(4, 1fr); gap: var(--space-sm); }
+    .grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
   }
   @media (min-width: 900px) {
-    .grid { grid-template-columns: repeat(5, 1fr); }
+    .grid { grid-template-columns: repeat(5, 1fr); gap: var(--space-3xs); }
   }
   @media (min-width: 1200px) {
     .grid { grid-template-columns: repeat(6, 1fr); }
@@ -636,12 +637,12 @@
     width: 100%;
     text-align: left;
     background: transparent;
-    border-radius: var(--radius-2);
     overflow: hidden;
     transition: transform var(--dur-quick) var(--ease-out);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
+    display: block;
   }
   @media (hover: hover) {
     .tile:hover:not(.selected) {
@@ -655,9 +656,8 @@
   .tile-photo {
     background: var(--tile);
     aspect-ratio: 1;
-    padding: 8%;
-    margin-bottom: var(--space-2xs);
-    border-radius: var(--radius-3);
+    padding: 6%;
+    border-radius: 0;
     position: relative;
     transition: filter var(--dur-quick) var(--ease-out), outline var(--dur-quick) var(--ease-out);
     outline: 2px solid transparent;
@@ -703,21 +703,6 @@
     place-items: center;
     font-size: 13px;
     font-weight: 700;
-  }
-  .tile-name {
-    font-size: var(--text-sm);
-    color: var(--text);
-    line-height: var(--lh-snug);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    line-clamp: 1;
-  }
-  .tile-meta {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    margin-top: 2px;
   }
 
   /* Empty state */
@@ -778,8 +763,7 @@
   .fab {
     position: fixed;
     right: var(--space-md);
-    /* Clear the floating nav (visual height + bottom gap) + breathing space. */
-    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md) + var(--space-2xs));
+    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md));
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -813,7 +797,7 @@
     position: fixed;
     left: var(--space-sm);
     right: var(--space-sm);
-    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-sm) + var(--space-2xs));
+    bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-sm));
     background: var(--surface-3);
     color: var(--text);
     border: 1px solid var(--border);

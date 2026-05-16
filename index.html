@@ -19,8 +19,55 @@
     />
 
     <title>Shmotkee</title>
+
+    <!-- Splash: inline so it paints before the JS bundle loads.
+         Removed by src/main.ts once the app mounts. Burgundy bar +
+         Yeseva wordmark; falls back to system serif while the font
+         downloads (the brand reads from the word + colour, the exact
+         glyph shape is fine to be slightly different for 200ms). -->
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        background: oklch(0.555 0.180 18); /* --accent (burgundy) */
+        color: oklch(0.985 0.003 18);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+        font-family: 'Yeseva One', 'Times New Roman', serif;
+      }
+      #splash .wordmark {
+        font-size: 3.75rem;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      #splash .bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        width: 0;
+        background: oklch(0.985 0.003 18 / 0.7);
+        animation: splash-bar 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes splash-bar {
+        from { width: 0; }
+        to   { width: 100%; }
+      }
+      #splash.fade {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <span class="wordmark">Shmotkee</span>
+      <div class="bar"></div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

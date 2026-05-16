@@ -49,25 +49,25 @@
   .nav {
     --nav-pad: var(--space-sm);
     /* Translucent: content scrolls behind the nav so the last list
-       items pass under it with a subtle blur. The bg is mixed with
-       transparency and a backdrop-filter blurs whatever's behind. */
+       items pass under it with a subtle blur. */
     background: color-mix(in oklab, var(--bg) 78%, transparent);
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius-3);
+    border-top: 1px solid var(--border-soft);
     padding: var(--space-3xs) var(--nav-pad);
+    /* Include home-indicator safe area inside the nav so the content
+       sits comfortably above the iOS indicator line. */
+    padding-bottom: max(var(--space-3xs), var(--safe-bottom));
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    /* Floating island: detached from the screen edges with margins on
-       three sides. The home-indicator safe area sits below the nav,
-       not inside it, so we don't need internal padding for clearance. */
+    /* Anchored to the bottom edge — content scrolls under it via
+     .tab-page's matching padding-bottom. Saves ~20px of vertical
+     real estate vs the floating variant. */
     position: absolute;
-    left: var(--space-sm);
-    right: var(--space-sm);
-    bottom: max(var(--space-2xs), var(--safe-bottom));
-    box-shadow: var(--shadow-elev-2);
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 50;
   }
 
