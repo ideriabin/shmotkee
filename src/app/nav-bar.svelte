@@ -30,7 +30,9 @@
           aria-current={appState.tab === item.id ? 'page' : undefined}
           onclick={() => setTab(item.id)}
         >
-          <item.icon size={22} strokeWidth={appState.tab === item.id ? 2 : 1.5} aria-hidden="true" />
+          <span class="tab-icon">
+            <item.icon size={22} strokeWidth={appState.tab === item.id ? 2 : 1.5} aria-hidden="true" />
+          </span>
           <span class="tab-label">{item.label}</span>
         </button>
       </li>
@@ -89,6 +91,15 @@
     border-radius: var(--radius-1);
     transition: color var(--dur-quick) var(--ease-out);
     position: relative;
+  }
+  /* Fixed-size icon container — lucide glyphs vary in width within
+     their 24×24 viewBox, so without a constant bounding box the labels
+     can drift up/down between tabs. This pins them to the same baseline. */
+  .tab-icon {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
   }
   .tab:hover {
     color: var(--text-soft);

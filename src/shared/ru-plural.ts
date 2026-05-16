@@ -14,6 +14,7 @@ export function plural(n: number, forms: readonly [string, string, string]): str
 }
 
 export const OUTFITS = ['образ', 'образа', 'образов'] as const;
+export const ITEMS = ['вещь', 'вещи', 'вещей'] as const;
 export const FILES = ['файл', 'файла', 'файлов'] as const;
 export const DAYS_AGO = ['день назад', 'дня назад', 'дней назад'] as const;
 export const HOURS_AGO = ['час назад', 'часа назад', 'часов назад'] as const;

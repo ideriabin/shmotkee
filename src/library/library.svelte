@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Plus, X, ListChecks, CheckCheck, MoveRight } from 'lucide-svelte';
+  import { Plus, X, ListChecks, CheckCheck, MoveRight, Trash2, CircleDashed } from 'lucide-svelte';
   import { liveQuery } from 'dexie';
   import { db } from '../db/schema';
   import type { Item } from '../shared/types';
@@ -8,8 +8,8 @@
     SLOT_LABEL_RU,
     type SlotKey,
   } from '../shared/slots';
-  import { plural, OUTFITS } from '../shared/ru-plural';
-  import { updateItemSlots, snapshotSlots, restoreItemSlots } from '../db/items';
+  import { plural, OUTFITS, ITEMS } from '../shared/ru-plural';
+  import { updateItemSlots, snapshotSlots, restoreItemSlots, deleteItem } from '../db/items';
   import Thumb from './thumb.svelte';
   import UploadSheet from './upload-sheet.svelte';
   import ItemDetail from './item-detail.svelte';
@@ -28,12 +28,18 @@
 
   // Undo state — captured on every batch move.
   let lastAction = $state<{
+    kind: 'move' | 'delete';
     snapshot: Map<string, SlotKey | null>;
+    deletedItems?: Item[];
     targetSlot: SlotKey | null;
     count: number;
   } | null>(null);
   let undoVisible = $state(false);
   let undoTimer: number | undefined;
+
+  // Bulk-delete confirmation
+  let confirmDeleteCount = $state(0);
+  let showDeleteConfirm = $state(false);
 
   $effect(() => {
     const obs = liveQuery(() => db.items.orderBy('createdAt').reverse().toArray());
@@ -136,13 +142,30 @@
   }
 
   // ─── Batch move + undo ─────────────────────────────────────────────
-  async function batchAssign(slot: SlotKey) {
+  async function batchAssign(slot: SlotKey | null) {
     if (selectedIds.size === 0) return;
     const ids = [...selectedIds];
     const snapshot = await snapshotSlots(ids);
     await updateItemSlots(ids, slot);
-    lastAction = { snapshot, targetSlot: slot, count: ids.length };
+    lastAction = { kind: 'move', snapshot, targetSlot: slot, count: ids.length };
     showUndo();
+    clearSelection();
+  }
+
+  function askBatchDelete() {
+    if (selectedIds.size === 0) return;
+    confirmDeleteCount = selectedIds.size;
+    showDeleteConfirm = true;
+  }
+
+  async function batchDelete() {
+    if (selectedIds.size === 0) return;
+    const ids = [...selectedIds];
+    // Cascading deletes also drop the items from saved outfits — those
+    // can't be undone via the toast.
+    for (const id of ids) await deleteItem(id);
+    showDeleteConfirm = false;
+    confirmDeleteCount = 0;
     clearSelection();
   }
 
@@ -175,89 +198,94 @@
 </script>
 
 <section class="page">
-  {#if inSelection}
-    <header class="hero hero-select">
-      <div class="select-bar">
-        <button class="icon-btn" type="button" aria-label="Отмена" onclick={exitSelectionMode}>
-          <X size={20} strokeWidth={1.6} aria-hidden="true" />
+  <header class="hero">
+    <div class="title-row">
+      {#if inSelection}
+        <button class="title-icon-btn" type="button" aria-label="Отмена" onclick={exitSelectionMode}>
+          <X size={22} strokeWidth={1.6} aria-hidden="true" />
         </button>
-        <span class="select-count">
-          <span class="display select-count-n">{selectedIds.size}</span>
-          <span class="select-count-label">выбрано</span>
-        </span>
-        <button class="ghost" type="button" onclick={selectAllVisible}>
-          <CheckCheck size={16} strokeWidth={1.6} aria-hidden="true" />
-          <span>все</span>
+        <h1 class="title title-select">
+          <span class="display title-strong">{selectedIds.size}</span>
+          <span class="title-meta">выбрано</span>
+        </h1>
+        <button class="title-icon-btn" type="button" aria-label="Выбрать все" onclick={selectAllVisible}>
+          <CheckCheck size={20} strokeWidth={1.6} aria-hidden="true" />
         </button>
-      </div>
-      <p class="select-hint">Тапни слот, чтобы переместить.</p>
-      <div class="drop-strip" role="toolbar" aria-label="Куда переместить">
+      {:else}
+        <h1 class="title">
+          <span class="display title-strong">Гардероб</span>
+          <span class="title-count">{items.length}</span>
+        </h1>
+      {/if}
+    </div>
+
+    <div class="chip-strip" role={inSelection ? 'toolbar' : 'tablist'}>
+      {#if inSelection}
         {#each SLOT_KEYS as slot (slot)}
-          <button class="drop-chip" type="button" onclick={() => batchAssign(slot)}>
+          <button class="chip chip-drop" type="button" onclick={() => batchAssign(slot)}>
             <MoveRight size={12} strokeWidth={1.8} aria-hidden="true" />
             <span>{SLOT_LABEL_RU[slot]}</span>
           </button>
         {/each}
-      </div>
-    </header>
-  {:else}
-    <header class="hero">
-      <h1 class="title">
-        <span class="display title-strong">Гардероб</span>
-        <span class="title-count">{items.length}</span>
-      </h1>
-
-      <div class="filters" role="tablist" aria-label="Фильтр по слотам">
+        <button class="chip chip-drop chip-drop-soft" type="button" onclick={() => batchAssign(null)}>
+          <CircleDashed size={12} strokeWidth={1.8} aria-hidden="true" />
+          <span>Без слота</span>
+        </button>
+        <button class="chip chip-destructive" type="button" onclick={askBatchDelete}>
+          <Trash2 size={12} strokeWidth={1.8} aria-hidden="true" />
+          <span>Удалить</span>
+        </button>
+      {:else}
         {#if slotCounts.unclassified > 0}
           <button
             role="tab"
             type="button"
-            class="filter filter-warn"
+            class="chip chip-filter chip-warn"
             class:active={filter === 'unclassified'}
             aria-selected={filter === 'unclassified'}
             onclick={() => setFilter('unclassified')}
           >
             Без слота
-            <span class="filter-count">{slotCounts.unclassified}</span>
+            <span class="chip-count">{slotCounts.unclassified}</span>
           </button>
         {/if}
         <button
           role="tab"
           type="button"
-          class="filter"
+          class="chip chip-filter"
           class:active={filter === 'all'}
           aria-selected={filter === 'all'}
           onclick={() => setFilter('all')}
         >
           Все
-          <span class="filter-count">{slotCounts.all}</span>
+          <span class="chip-count">{slotCounts.all}</span>
         </button>
         {#each SLOT_KEYS as slot (slot)}
           <button
             role="tab"
             type="button"
-            class="filter"
+            class="chip chip-filter"
             class:active={filter === slot}
             aria-selected={filter === slot}
             onclick={() => setFilter(slot)}
           >
             {SLOT_LABEL_RU[slot]}
-            <span class="filter-count">{slotCounts[slot] ?? 0}</span>
+            <span class="chip-count">{slotCounts[slot] ?? 0}</span>
           </button>
         {/each}
-      </div>
-
-      {#if filter === 'unclassified' && slotCounts.unclassified > 0}
-        <div class="triage-bar">
-          <button class="triage-btn" type="button" onclick={() => (triageOpen = true)}>
-            <ListChecks size={18} strokeWidth={1.6} aria-hidden="true" />
-            <span class="display triage-label">Разобрать по одному</span>
-            <span class="triage-count">{slotCounts.unclassified}</span>
-          </button>
-        </div>
       {/if}
-    </header>
-  {/if}
+    </div>
+
+    {#if !inSelection && filter === 'unclassified' && slotCounts.unclassified > 0}
+      <div class="triage-bar">
+        <button class="triage-btn" type="button" onclick={() => (triageOpen = true)}>
+          <ListChecks size={18} strokeWidth={1.6} aria-hidden="true" />
+          <span class="display triage-label">Разобрать по одному</span>
+          <span class="triage-count">{slotCounts.unclassified}</span>
+        </button>
+      </div>
+    {/if}
+  </header>
 
   {#if items.length === 0}
     <div class="empty">
@@ -322,7 +350,7 @@
   {#if undoVisible && lastAction}
     <div class="toast" role="status">
       <span>
-        Перемещено {lastAction.count} {plural(lastAction.count, OUTFITS)} →
+        Перемещено {lastAction.count} {plural(lastAction.count, ITEMS)} →
         {lastAction.targetSlot ? SLOT_LABEL_RU[lastAction.targetSlot] : 'без слота'}
       </span>
       <button class="toast-action" type="button" onclick={undo}>Отменить</button>
@@ -340,6 +368,19 @@
   {#if triageOpen}
     <Triage onClose={() => (triageOpen = false)} />
   {/if}
+
+  {#if showDeleteConfirm}
+    <div class="modal" role="alertdialog">
+      <div class="modal-card">
+        <p class="modal-title display">Удалить {confirmDeleteCount} {plural(confirmDeleteCount, ITEMS)}?</p>
+        <p class="modal-hint">Действие нельзя отменить. Эти вещи также пропадут из всех сохранённых образов.</p>
+        <div class="modal-actions">
+          <button type="button" class="modal-ghost" onclick={() => (showDeleteConfirm = false)}>отмена</button>
+          <button type="button" class="modal-destructive" onclick={batchDelete}>удалить</button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </section>
 
 <style>
@@ -353,14 +394,29 @@
   }
 
   .hero {
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
   }
 
+  /* Title row stays the same height between idle and selection mode so
+     the page below doesn't jump when entering/leaving selection. */
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    min-height: 40px;
+    margin-bottom: var(--space-2xs);
+  }
   .title {
     display: flex;
     align-items: baseline;
     gap: var(--space-2xs);
-    margin-bottom: var(--space-md);
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .title-select {
+    /* Bigger gap between count and label */
+    gap: var(--space-3xs);
   }
   .title-strong {
     font-family: var(--font-display);
@@ -375,50 +431,127 @@
     color: var(--text-muted);
     line-height: 1;
   }
-
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3xs);
+  .title-meta {
+    font-size: var(--text-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
-  .filter {
-    display: inline-flex;
-    align-items: baseline;
+  .title-icon-btn {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    border-radius: var(--radius-2);
+    flex-shrink: 0;
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
+  }
+  .title-icon-btn:hover, .title-icon-btn:active {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  /* ─── unified chip strip ─── horizontal scrolling, single line.
+     Hosts filter chips in idle mode and drop-target/destructive chips
+     in selection mode. Same DOM slot → no layout shift. */
+  .chip-strip {
+    display: flex;
     gap: var(--space-3xs);
-    padding: var(--space-3xs) var(--space-xs);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: var(--space-3xs) 0;
+    /* let the scroll bleed to the page edges so chips don't look
+       cramped against the padding */
+    margin: 0 calc(-1 * var(--hero-pad));
+    padding-left: var(--hero-pad);
+    padding-right: var(--hero-pad);
+    scroll-padding-inline: var(--hero-pad);
+    -webkit-overflow-scrolling: touch;
+  }
+  .chip-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3xs);
+    padding: var(--space-2xs) var(--space-sm);
     border-radius: var(--radius-pill);
     border: 1px solid var(--border-soft);
     color: var(--text-soft);
-    font-size: var(--text-sm);
-    transition: all var(--dur-quick) var(--ease-out);
     background: transparent;
+    font-size: var(--text-sm);
+    line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all var(--dur-quick) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
-  .filter:hover {
+  .chip:hover, .chip:active {
     color: var(--text);
     border-color: var(--border);
   }
-  .filter.active {
+
+  .chip-filter.active {
     background: var(--text);
     border-color: var(--text);
     color: var(--bg);
   }
-  .filter-warn {
+  .chip-warn {
     color: var(--accent);
     border-color: var(--accent);
   }
-  .filter-warn.active {
+  .chip-warn.active {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--accent-on);
   }
-  .filter-count {
+  .chip-count {
     font-size: var(--text-xs);
     opacity: 0.7;
     font-variant-numeric: tabular-nums;
   }
 
+  .chip-drop {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--text);
+    font-weight: var(--w-medium);
+    font-size: var(--text-md);
+  }
+  .chip-drop:hover, .chip-drop:active {
+    background: var(--accent);
+    color: var(--accent-on);
+  }
+  .chip-drop-soft {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+  .chip-drop-soft:hover, .chip-drop-soft:active {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .chip-destructive {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+    font-weight: var(--w-medium);
+    font-size: var(--text-md);
+  }
+  .chip-destructive:hover, .chip-destructive:active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-on);
+  }
+
   .triage-bar {
-    margin-top: var(--space-sm);
+    margin-top: var(--space-2xs);
   }
   .triage-btn {
     display: inline-flex;
@@ -444,94 +577,6 @@
     background: oklch(0 0 0 / 0.18);
     padding: 2px var(--space-2xs);
     border-radius: var(--radius-pill);
-  }
-
-  /* ─── selection bar ─── */
-  .hero-select {
-    background: var(--surface);
-    margin: calc(-1 * var(--space-md)) calc(-1 * var(--hero-pad)) var(--space-md);
-    padding: var(--space-sm) var(--hero-pad);
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .select-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-2xs);
-  }
-  .icon-btn {
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    color: var(--text-muted);
-    border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
-  }
-  .icon-btn:hover {
-    color: var(--text);
-    background: var(--surface-2);
-  }
-  .select-count {
-    flex: 1;
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3xs);
-  }
-  .select-count-n {
-    font-size: var(--text-2xl);
-    line-height: 1;
-    color: var(--text);
-  }
-  .select-count-label {
-    font-size: var(--text-xs);
-    letter-spacing: var(--track-caps);
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3xs);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    padding: var(--space-2xs) var(--space-2xs);
-    border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out);
-  }
-  .ghost:hover {
-    color: var(--text);
-  }
-  .select-hint {
-    font-size: var(--text-xs);
-    letter-spacing: var(--track-caps);
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: var(--space-2xs);
-  }
-  .drop-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2xs);
-  }
-  .drop-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2xs);
-    padding: var(--space-xs) var(--space-sm);
-    min-height: 44px;
-    background: var(--accent-tint);
-    border: 1px solid var(--accent);
-    color: var(--text);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-md);
-    font-weight: var(--w-medium);
-    transition: background var(--dur-quick) var(--ease-out);
-    -webkit-tap-highlight-color: transparent;
-  }
-  .drop-chip:hover, .drop-chip:active {
-    background: var(--accent);
-    color: var(--accent-on);
   }
 
   /* ─── grid ─── */
@@ -746,5 +791,61 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .toast { animation: none; }
+  }
+
+  /* Bulk-delete confirm modal */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: var(--scrim-strong);
+    display: grid;
+    place-items: center;
+    padding: var(--space-md);
+    z-index: 400;
+  }
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2);
+    padding: var(--space-md);
+    max-width: 380px;
+    width: 100%;
+  }
+  .modal-title {
+    font-size: var(--text-2xl);
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: var(--space-2xs);
+  }
+  .modal-hint {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--lh-snug);
+    margin-bottom: var(--space-md);
+  }
+  .modal-actions {
+    display: flex;
+    gap: var(--space-2xs);
+    justify-content: flex-end;
+  }
+  .modal-ghost {
+    padding: var(--space-2xs) var(--space-sm);
+    color: var(--text-muted);
+    border-radius: var(--radius-2);
+    transition: color var(--dur-quick) var(--ease-out);
+  }
+  .modal-ghost:hover, .modal-ghost:active {
+    color: var(--text);
+  }
+  .modal-destructive {
+    background: var(--accent);
+    color: var(--accent-on);
+    padding: var(--space-2xs) var(--space-sm);
+    border-radius: var(--radius-2);
+    font-weight: var(--w-medium);
+    transition: background var(--dur-quick) var(--ease-out);
+  }
+  .modal-destructive:hover, .modal-destructive:active {
+    background: var(--accent-hover);
   }
 </style>
