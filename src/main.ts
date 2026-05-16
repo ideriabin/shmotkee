@@ -7,17 +7,20 @@ const app = mount(App, {
   target: document.getElementById('app')!,
 });
 
-// Fade out the inline splash once the app has mounted. requestAnimationFrame
-// gives Svelte a tick to paint the first frame so the cross-fade is to
-// something, not from-burgundy-to-blank.
+// Fade out the inline splash once the app has mounted AND a minimum
+// display time has elapsed — so cold-start launches always show the
+// brand moment for at least ~350ms, not a fast flicker.
 const splash = document.getElementById('splash');
 if (splash) {
-  requestAnimationFrame(() => {
+  const minDisplayMs = 350;
+  const startedAt = Number(splash.dataset.startedAt) || Date.now();
+  const remaining = Math.max(0, minDisplayMs - (Date.now() - startedAt));
+  setTimeout(() => {
     splash.classList.add('fade');
     splash.addEventListener('transitionend', () => splash.remove(), { once: true });
     // Safety: remove after a generous timeout even if transitionend never fires.
-    setTimeout(() => splash.remove(), 1200);
-  });
+    setTimeout(() => splash.remove(), 1500);
+  }, remaining);
 }
 
 // Dev-only fixture seeder. Call `window.__seedFixtures()` from devtools or

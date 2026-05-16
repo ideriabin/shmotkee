@@ -60,8 +60,10 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-top: var(--safe-top);
-    /* Clear the anchored nav: visual height + home-indicator safe area. */
-    padding-bottom: calc(var(--nav-height-mobile) + var(--safe-bottom));
+    /* Clear the anchored nav with a safety margin — iOS reports
+       safe-bottom inconsistently in PWA standalone vs Safari, so we
+       overshoot rather than leave the last row clipped behind the nav. */
+    padding-bottom: calc(var(--nav-height-mobile) + var(--safe-bottom) + var(--space-md));
     overscroll-behavior-y: contain;
     opacity: 0;
     pointer-events: none;

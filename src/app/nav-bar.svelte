@@ -55,9 +55,12 @@
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     border-top: 1px solid var(--border-soft);
     padding: var(--space-3xs) var(--nav-pad);
-    /* Include home-indicator safe area inside the nav so the content
-       sits comfortably above the iOS indicator line. */
-    padding-bottom: max(var(--space-3xs), var(--safe-bottom));
+    /* iOS reports ~34px for safe-area-inset-bottom (home indicator),
+       but only ~16px is visually needed — subtract the overshoot so
+       tabs sit close to the indicator without an empty space below
+       them. The max() clamp keeps a sensible minimum for devices
+       without a home indicator. */
+    padding-bottom: max(var(--space-3xs), calc(var(--safe-bottom) - 18px));
     display: flex;
     align-items: center;
     gap: var(--space-md);
@@ -92,21 +95,24 @@
     gap: var(--space-3xs);
     position: relative;
   }
-  /* Sliding accent-tint background that highlights the active tab.
-     Sits BEHIND the tab content (z-index 0) and slides between
-     positions. Pattern from Apple Music's floating tab bar — the
-     active tab feels selected without a separate underline. */
+  /* Sliding accent underline that anchors the active tab. Sits at
+     the bottom of the tabs row (just above the safe-bottom padding
+     of the nav) so it reads as a single confident line that moves
+     between tab columns. --tab-index is set inline. */
   .indicator {
     position: absolute;
     width: calc((100% - 2 * var(--space-3xs)) / 3);
-    top: var(--space-3xs);
-    bottom: var(--space-3xs);
+    height: 2px;
+    bottom: 0;
     left: calc(var(--tab-index, 0) * (100% + var(--space-3xs)) / 3);
-    background: var(--accent-tint);
-    border-radius: calc(var(--radius-3) - var(--space-3xs));
-    transition: left var(--dur-base) var(--ease-out-expo);
-    will-change: left;
-    z-index: 0;
+    background: var(--accent);
+    border-radius: var(--radius-pill);
+    transform: scaleX(0.4);
+    transform-origin: center;
+    transition:
+      left var(--dur-base) var(--ease-out-expo),
+      transform var(--dur-quick) var(--ease-out);
+    will-change: left, transform;
   }
 
   .tab {
@@ -143,7 +149,7 @@
     transition-duration: 60ms;
   }
   .tab.active {
-    color: var(--accent);
+    color: var(--text);
   }
 
   .tab-label {

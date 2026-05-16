@@ -23,8 +23,13 @@ export default defineConfig(({ mode }) => ({
         dir: 'ltr',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#171012',
-        theme_color: '#171012',
+        /* background_color is what Android Chrome shows on the PWA
+           launch splash before the app paints. Burgundy matches the
+           inline splash so there's no flash of dark before the
+           brand moment. iOS uses apple-touch-startup-image for this
+           (not implemented yet — would need device-specific PNGs). */
+        background_color: '#9d1c2d',
+        theme_color: '#9d1c2d',
         start_url: '.',
         scope: '.',
         icons: [
