@@ -342,10 +342,18 @@
   .link {
     color: var(--accent);
     font-size: var(--text-sm);
-    transition: opacity var(--dur-quick) var(--ease-out);
+    padding: var(--space-3xs);
+    margin: calc(-1 * var(--space-3xs));
+    border-radius: var(--radius-2);
+    transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .link:hover {
-    opacity: 0.8;
+  @media (hover: hover) {
+    .link:hover { opacity: 0.8; }
+  }
+  .link:active {
+    opacity: 0.7;
+    transform: scale(0.96);
+    transition-duration: 60ms;
   }
   .constraints-empty {
     color: var(--text-faint);
@@ -495,10 +503,15 @@
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: var(--radius-2);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .more-btn:hover {
-    background: var(--surface);
+  @media (hover: hover) {
+    .more-btn:hover { background: var(--surface); }
+  }
+  .more-btn:active {
+    background: var(--surface-2);
+    transform: scale(0.97);
+    transition-duration: 60ms;
   }
   .exhausted {
     text-align: center;

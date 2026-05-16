@@ -41,20 +41,28 @@
   function confirm() {
     onConfirm(items.filter((it) => selectedIds.has(it.id)));
   }
+
+  let closing = $state(false);
+  function requestClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(onClose, 220);
+  }
 </script>
 
 <div
   class="overlay"
+  class:closing
   role="dialog"
   aria-modal="true"
   onclick={(e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget) requestClose();
   }}
 >
-  <div class="sheet">
+  <div class="sheet" class:closing>
     <header class="sheet-head">
       <h2 class="sheet-title">Закрепить вещи</h2>
-      <button class="icon-btn" type="button" aria-label="Закрыть" onclick={onClose}>
+      <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
         <X size={20} strokeWidth={1.6} aria-hidden="true" />
       </button>
     </header>
@@ -140,9 +148,17 @@
     display: grid;
     place-items: center;
     color: var(--text-muted);
+    border-radius: var(--radius-2);
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .icon-btn:hover {
+  @media (hover: hover) {
+    .icon-btn:hover { color: var(--text); }
+  }
+  .icon-btn:active {
+    transform: scale(0.9);
+    background: var(--surface-2);
     color: var(--text);
+    transition-duration: 60ms;
   }
 
   .filters {
@@ -246,14 +262,23 @@
     border-radius: var(--radius-2);
     font-family: var(--font-display);
     font-size: var(--text-xl);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .primary:hover {
+  @media (hover: hover) {
+    .primary:hover { background: var(--accent-hover); }
+  }
+  .primary:active {
     background: var(--accent-hover);
+    transform: scale(0.98);
+    transition-duration: 60ms;
   }
 
   @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fade-out { from { opacity: 1 } to { opacity: 0 } }
   @keyframes slide-up { from { transform: translateY(100%) } to { transform: translateY(0) } }
+  @keyframes slide-down { from { transform: translateY(0) } to { transform: translateY(100%) } }
+  .overlay.closing { animation: fade-out var(--dur-base) var(--ease-out) forwards; }
+  .sheet.closing { animation: slide-down var(--dur-base) var(--ease-out) forwards; }
   @media (prefers-reduced-motion: reduce) {
     .overlay, .sheet { animation: none; }
   }

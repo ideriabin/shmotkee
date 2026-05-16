@@ -13,6 +13,10 @@
     { id: 'compose', label: 'Собрать', icon: Sparkles },
     { id: 'sessions', label: 'Образы', icon: BookmarkCheck },
   ];
+
+  // Drive the underline indicator: a single element that slides between
+  // tab positions instead of three independent ::after underlines that snap.
+  const tabIndex = $derived(items.findIndex((i) => i.id === appState.tab));
 </script>
 
 <nav class="nav" aria-label="Главная навигация">
@@ -20,7 +24,7 @@
     <span class="wordmark-strong">Shmotkee</span>
   </a>
 
-  <ul class="tabs">
+  <ul class="tabs" style:--tab-index={tabIndex}>
     {#each items as item (item.id)}
       <li>
         <button
@@ -37,6 +41,7 @@
         </button>
       </li>
     {/each}
+    <span class="indicator" aria-hidden="true"></span>
   </ul>
 </nav>
 
@@ -77,6 +82,24 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-3xs);
+    position: relative;
+  }
+  /* Sliding accent indicator: a single element that animates between
+     tab columns instead of three independent ::after underlines that
+     would each snap on tab change. --tab-index is set inline. */
+  .indicator {
+    position: absolute;
+    width: calc((100% - 2 * var(--space-3xs)) / 3);
+    height: 2px;
+    bottom: -3px;
+    left: calc(var(--tab-index, 0) * (100% + var(--space-3xs)) / 3);
+    background: var(--accent);
+    transform: scaleX(0.4);
+    transform-origin: center;
+    transition:
+      left var(--dur-base) var(--ease-out-expo),
+      transform var(--dur-quick) var(--ease-out);
+    will-change: left, transform;
   }
 
   .tab {
@@ -112,14 +135,6 @@
   }
   .tab.active {
     color: var(--text);
-  }
-  .tab.active::after {
-    content: '';
-    position: absolute;
-    inset-inline: 30%;
-    bottom: -3px;
-    height: 2px;
-    background: var(--accent);
   }
 
   .tab-label {
@@ -161,14 +176,14 @@
       letter-spacing: var(--track-normal);
       text-transform: none;
     }
+    .indicator { display: none; }
     .tab.active::after {
       content: '';
-      inset-inline: auto;
+      position: absolute;
       inset-block: 30%;
       left: -1px;
-      bottom: auto;
       width: 2px;
-      height: auto;
+      background: var(--accent);
     }
   }
 </style>

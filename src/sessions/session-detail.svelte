@@ -257,6 +257,14 @@
     padding-bottom: var(--space-3xl);
     max-width: var(--content-max);
     margin: 0 auto;
+    animation: detail-in var(--dur-medium) var(--ease-out-expo);
+  }
+  @keyframes detail-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .detail { animation: none; }
   }
 
   .head {
@@ -317,13 +325,24 @@
     place-items: center;
     color: var(--text-muted);
     border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .icon-btn:hover {
+  @media (hover: hover) {
+    .icon-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+    .icon-btn.destructive:hover {
+      color: var(--accent);
+    }
+  }
+  .icon-btn:active {
     color: var(--text);
     background: var(--surface);
+    transform: scale(0.9);
+    transition-duration: 60ms;
   }
-  .icon-btn.destructive:hover {
+  .icon-btn.destructive:active {
     color: var(--accent);
   }
 
@@ -492,19 +511,29 @@
     padding: var(--space-2xs) var(--space-sm);
     color: var(--text-muted);
     border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out);
+    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .ghost:hover {
+  @media (hover: hover) {
+    .ghost:hover { color: var(--text); }
+  }
+  .ghost:active {
     color: var(--text);
+    transform: scale(0.96);
+    transition-duration: 60ms;
   }
   .primary {
     background: var(--accent);
     color: var(--accent-on);
     padding: var(--space-2xs) var(--space-sm);
     border-radius: var(--radius-2);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .primary:hover {
+  @media (hover: hover) {
+    .primary:hover { background: var(--accent-hover); }
+  }
+  .primary:active {
     background: var(--accent-hover);
+    transform: scale(0.96);
+    transition-duration: 60ms;
   }
 </style>

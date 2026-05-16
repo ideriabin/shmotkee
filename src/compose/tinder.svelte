@@ -13,6 +13,13 @@
   let pointerId: number | null = null;
   let startX = 0;
 
+  let closing = $state(false);
+  function requestClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(onClose, 260);
+  }
+
   const PULL_AHEAD = 8;
   const SWIPE_THRESHOLD = 100;
 
@@ -80,9 +87,9 @@
   const tint = $derived(Math.max(-1, Math.min(1, dragX / SWIPE_THRESHOLD)));
 </script>
 
-<div class="tinder" role="dialog" aria-modal="true">
+<div class="tinder" class:closing role="dialog" aria-modal="true">
   <header class="top">
-    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={onClose}>
+    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
       <X size={22} strokeWidth={1.6} aria-hidden="true" />
     </button>
     <div class="position">
@@ -163,12 +170,19 @@
     padding: var(--safe-top) 0 var(--safe-bottom);
     animation: tinder-in var(--dur-medium) var(--ease-out-expo);
   }
+  .tinder.closing {
+    animation: tinder-out var(--dur-base) var(--ease-out) forwards;
+  }
   @keyframes tinder-in {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes tinder-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(8px); }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .tinder { animation: none; }
+    .tinder, .tinder.closing { animation: none; }
   }
 
   .top {
@@ -185,11 +199,19 @@
     place-items: center;
     color: var(--text-muted);
     border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .icon-btn:hover {
-    color: var(--text);
+  @media (hover: hover) {
+    .icon-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+  }
+  .icon-btn:active:not(:disabled) {
+    transform: scale(0.9);
     background: var(--surface);
+    color: var(--text);
+    transition-duration: 60ms;
   }
   .icon-btn:disabled {
     opacity: 0.3;

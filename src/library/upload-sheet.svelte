@@ -86,13 +86,17 @@
     step = 'done';
   }
 
+  let closing = $state(false);
   function close() {
-    onClose();
+    if (closing) return;
+    closing = true;
+    setTimeout(onClose, 220);
   }
 </script>
 
 <div
   class="overlay"
+  class:closing
   role="dialog"
   aria-modal="true"
   aria-labelledby="upload-title"
@@ -100,7 +104,7 @@
     if (e.target === e.currentTarget) close();
   }}
 >
-  <div class="sheet" role="document">
+  <div class="sheet" class:closing role="document">
     <header class="sheet-head">
       <h2 id="upload-title" class="sheet-title">
         {#if step === 'source'}
@@ -236,10 +240,17 @@
     display: grid;
     place-items: center;
     color: var(--text-muted);
-    transition: color var(--dur-quick) var(--ease-out);
+    border-radius: var(--radius-2);
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .icon-btn:hover {
+  @media (hover: hover) {
+    .icon-btn:hover { color: var(--text); }
+  }
+  .icon-btn:active {
     color: var(--text);
+    background: var(--surface-2);
+    transform: scale(0.9);
+    transition-duration: 60ms;
   }
 
   .hint {
@@ -363,19 +374,38 @@
     border-radius: var(--radius-2);
     font-family: var(--font-display);
     font-size: var(--text-xl);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .primary:hover {
+  @media (hover: hover) {
+    .primary:hover { background: var(--accent-hover); }
+  }
+  .primary:active {
     background: var(--accent-hover);
+    transform: scale(0.98);
+    transition-duration: 60ms;
   }
 
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
   }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
   @keyframes slide-up {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+  }
+  @keyframes slide-down {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+  }
+  .overlay.closing {
+    animation: fade-out var(--dur-base) var(--ease-out) forwards;
+  }
+  .sheet.closing {
+    animation: slide-down var(--dur-base) var(--ease-out) forwards;
   }
 
   @media (prefers-reduced-motion: reduce) {

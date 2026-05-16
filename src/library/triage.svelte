@@ -75,16 +75,23 @@
     setTimeout(() => (leaving = false), 180);
   }
 
+  let closing = $state(false);
+  function requestClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(onClose, 260);
+  }
+
   function onKey(ev: KeyboardEvent) {
-    if (ev.key === 'Escape') onClose();
+    if (ev.key === 'Escape') requestClose();
   }
 </script>
 
 <svelte:window onkeydown={onKey} />
 
-<div class="triage" role="dialog" aria-modal="true">
+<div class="triage" class:closing role="dialog" aria-modal="true">
   <header class="top">
-    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={onClose}>
+    <button class="icon-btn" type="button" aria-label="Закрыть" onclick={requestClose}>
       <X size={22} strokeWidth={1.6} aria-hidden="true" />
     </button>
     <div class="counter">
@@ -128,7 +135,7 @@
 
   <footer class="actions">
     {#if finished || !current}
-      <button class="action-close" type="button" onclick={onClose}>
+      <button class="action-close" type="button" onclick={requestClose}>
         <span class="display action-close-label">Закрыть</span>
       </button>
     {:else}
@@ -155,6 +162,21 @@
     flex-direction: column;
     z-index: 320;
     padding: var(--safe-top) 0 var(--safe-bottom);
+    animation: triage-in var(--dur-medium) var(--ease-out-expo);
+  }
+  .triage.closing {
+    animation: triage-out var(--dur-base) var(--ease-out) forwards;
+  }
+  @keyframes triage-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes triage-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(8px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .triage, .triage.closing { animation: none; }
   }
 
   .top {
@@ -173,9 +195,20 @@
     border-radius: var(--radius-2);
     transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out);
   }
-  .icon-btn:hover {
+  .icon-btn {
+    transition: color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .icon-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+  }
+  .icon-btn:active:not(:disabled) {
     color: var(--text);
     background: var(--surface);
+    transform: scale(0.9);
+    transition-duration: 60ms;
   }
   .icon-btn:disabled {
     opacity: 0.3;

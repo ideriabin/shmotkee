@@ -729,10 +729,15 @@
     border-radius: var(--radius-2);
     font-family: var(--font-display);
     font-size: var(--text-xl);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .empty-cta:hover {
+  @media (hover: hover) {
+    .empty-cta:hover { background: var(--accent-hover); }
+  }
+  .empty-cta:active {
     background: var(--accent-hover);
+    transform: scale(0.97);
+    transition-duration: 60ms;
   }
 
   /* FAB */
@@ -849,10 +854,15 @@
     padding: var(--space-2xs) var(--space-sm);
     color: var(--text-muted);
     border-radius: var(--radius-2);
-    transition: color var(--dur-quick) var(--ease-out);
+    transition: color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .modal-ghost:hover, .modal-ghost:active {
+  @media (hover: hover) {
+    .modal-ghost:hover { color: var(--text); }
+  }
+  .modal-ghost:active {
     color: var(--text);
+    transform: scale(0.96);
+    transition-duration: 60ms;
   }
   .modal-destructive {
     background: var(--accent);
@@ -860,9 +870,14 @@
     padding: var(--space-2xs) var(--space-sm);
     border-radius: var(--radius-2);
     font-weight: var(--w-medium);
-    transition: background var(--dur-quick) var(--ease-out);
+    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
   }
-  .modal-destructive:hover, .modal-destructive:active {
+  @media (hover: hover) {
+    .modal-destructive:hover { background: var(--accent-hover); }
+  }
+  .modal-destructive:active {
     background: var(--accent-hover);
+    transform: scale(0.96);
+    transition-duration: 60ms;
   }
 </style>
