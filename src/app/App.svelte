@@ -44,7 +44,11 @@
   /* All three tab pages live in a single positioned wrapper so we can
      crossfade between them without losing scroll position or
      remounting state. Each page is its own scroll container; switching
-     tabs swaps which one is visible & receiving pointer events. */
+     tabs swaps which one is visible & receiving pointer events.
+
+     On mobile, the nav floats translucently over the content so the
+     last item of the list can scroll behind it — that's why
+     .tab-page has bottom padding equal to nav height + safe-area. */
   .content {
     flex: 1;
     min-height: 0;
@@ -56,6 +60,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-top: var(--safe-top);
+    padding-bottom: calc(var(--nav-height-mobile) + var(--safe-bottom));
     overscroll-behavior-y: contain;
     opacity: 0;
     pointer-events: none;
@@ -73,6 +78,7 @@
     }
     .tab-page {
       padding-top: 0;
+      padding-bottom: 0;
     }
   }
 </style>

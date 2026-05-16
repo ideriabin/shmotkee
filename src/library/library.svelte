@@ -35,7 +35,9 @@
     count: number;
   } | null>(null);
   let undoVisible = $state(false);
+  let undoClosing = $state(false);
   let undoTimer: number | undefined;
+  let undoHideTimer: number | undefined;
 
   // Bulk-delete confirmation
   let confirmDeleteCount = $state(0);
@@ -171,19 +173,28 @@
 
   function showUndo() {
     undoVisible = true;
+    undoClosing = false;
     if (undoTimer) window.clearTimeout(undoTimer);
-    undoTimer = window.setTimeout(() => {
+    if (undoHideTimer) window.clearTimeout(undoHideTimer);
+    undoTimer = window.setTimeout(dismissUndo, 5000);
+  }
+
+  function dismissUndo() {
+    if (!undoVisible) return;
+    undoClosing = true;
+    if (undoHideTimer) window.clearTimeout(undoHideTimer);
+    undoHideTimer = window.setTimeout(() => {
       undoVisible = false;
+      undoClosing = false;
       lastAction = null;
-    }, 5000);
+    }, 260);
   }
 
   async function undo() {
     if (!lastAction) return;
     await restoreItemSlots(lastAction.snapshot);
     if (undoTimer) window.clearTimeout(undoTimer);
-    undoVisible = false;
-    lastAction = null;
+    dismissUndo();
   }
 
   function exitSelectionMode() {
@@ -348,7 +359,7 @@
   {/if}
 
   {#if undoVisible && lastAction}
-    <div class="toast" role="status">
+    <div class="toast" class:closing={undoClosing} role="status">
       <span>
         Перемещено {lastAction.count} {plural(lastAction.count, ITEMS)} →
         {lastAction.targetSlot ? SLOT_LABEL_RU[lastAction.targetSlot] : 'без слота'}
@@ -811,8 +822,15 @@
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
+  @keyframes toast-out {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+  }
+  .toast.closing {
+    animation: toast-out var(--dur-base) var(--ease-out) forwards;
+  }
   @media (prefers-reduced-motion: reduce) {
-    .toast { animation: none; }
+    .toast, .toast.closing { animation: none; }
   }
 
   /* Bulk-delete confirm modal */

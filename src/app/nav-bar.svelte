@@ -48,7 +48,12 @@
 <style>
   .nav {
     --nav-pad: var(--space-sm);
-    background: var(--bg);
+    /* Translucent: content scrolls behind the nav so the last list
+       items pass under it with a subtle blur. The bg is mixed with
+       transparency and a backdrop-filter blurs whatever's behind. */
+    background: color-mix(in oklab, var(--bg) 78%, transparent);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
     border-top: 1px solid var(--border-soft);
     padding: 0 var(--nav-pad);
     /* iOS reports ~34px for the home-indicator safe area, which is more
@@ -60,6 +65,12 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
+    /* Float over the content on mobile so backdrop-filter has
+       something to blur (the .tab-page reserves matching padding). */
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 50;
   }
 
@@ -147,6 +158,7 @@
   /* Desktop: vertical side nav with wordmark on top. */
   @media (min-width: 900px) {
     .nav {
+      position: static;
       flex-direction: column;
       align-items: stretch;
       border-top: none;
@@ -154,6 +166,10 @@
       padding: var(--space-lg) var(--space-md);
       gap: var(--space-2xl);
       width: var(--nav-width-desktop);
+      /* Solid background on desktop — no behind-content to blur. */
+      background: var(--bg);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
     .wordmark {
       display: block;
