@@ -14,6 +14,7 @@
   import UploadSheet from './upload-sheet.svelte';
   import ItemDetail from './item-detail.svelte';
   import Triage from './triage.svelte';
+  import ThemeSwitcher from '../app/theme-switcher.svelte';
 
   type Filter = 'all' | 'unclassified' | SlotKey;
 
@@ -339,6 +340,13 @@
         </li>
       {/each}
     </ul>
+  {/if}
+
+  {#if !inSelection}
+    <footer class="meta-footer">
+      <span class="meta-label">Тема</span>
+      <ThemeSwitcher />
+    </footer>
   {/if}
 
   {#if !inSelection}
@@ -725,6 +733,25 @@
   }
   .empty-cta:hover {
     background: var(--accent-hover);
+  }
+
+  /* App-meta footer (theme switcher etc.) sits after the grid in the
+     scroll area, so it never overlaps with chrome or selection-mode
+     controls. */
+  .meta-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-top: var(--space-xl);
+    padding: var(--space-md) 0 var(--space-lg);
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-muted);
+  }
+  .meta-label {
+    font-size: var(--text-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
   }
 
   /* FAB */
