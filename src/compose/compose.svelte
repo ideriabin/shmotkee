@@ -167,25 +167,28 @@
   </header>
 
   <div class="controls">
-    <div class="constraints">
-      <div class="constraints-head">
+    <!-- Whole row opens the picker, not just the tiny "изменить" link.
+         Wife couldn't reliably hit the link on iPad — making the entire
+         block the tap target removes the friction. -->
+    <button class="constraints constraints-button" type="button" onclick={() => (showSubsetPicker = true)}>
+      <span class="constraints-head">
         <span class="constraints-label">
           <Layers size={14} strokeWidth={1.6} aria-hidden="true" />
           подборка
         </span>
-        <button class="link" type="button" onclick={() => (showSubsetPicker = true)}>
+        <span class="link-look">
           {composeState.session?.subsetIds && composeState.session.subsetIds.length > 0 ? 'изменить' : 'добавить'}
-        </button>
-      </div>
+        </span>
+      </span>
       {#if !composeState.session?.subsetIds || composeState.session.subsetIds.length === 0}
-        <p class="constraints-empty">Из всего гардероба.</p>
+        <span class="constraints-empty">Из всего гардероба.</span>
       {:else}
-        <p class="constraints-summary">
+        <span class="constraints-summary">
           <strong>{composeState.session.subsetIds.length}</strong>
           <span class="constraints-summary-suffix">из {composeState.library.length} в гардеробе</span>
-        </p>
+        </span>
       {/if}
-    </div>
+    </button>
 
     {#if composeState.session}
       <SlotRanges ranges={composeState.session.slotRanges} onChange={onRangesChanged} />
@@ -368,11 +371,38 @@
     border-radius: var(--radius-2);
     padding: var(--space-sm);
   }
+  /* Button variant of .constraints — used when the whole row should
+     act as a single tap target. Reset button defaults so it inherits
+     .constraints styling without weird centering / cursor / font. */
+  .constraints-button {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .constraints-button:hover {
+      background: var(--surface-2);
+      border-color: var(--border);
+    }
+  }
+  .constraints-button:active {
+    transform: scale(0.99);
+    background: var(--surface-2);
+    transition-duration: 60ms;
+  }
   .constraints-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-2xs);
+  }
+  /* Visual link styling without a real <button> — we're inside a
+     button-as-row already, so the affordance is a span that looks
+     tappable but isn't itself interactive. */
+  .link-look {
+    color: var(--accent);
+    font-size: var(--text-sm);
   }
   .constraints-label {
     display: inline-flex;
@@ -400,6 +430,7 @@
     transition-duration: 60ms;
   }
   .constraints-empty {
+    display: block;
     color: var(--text-faint);
     font-size: var(--text-sm);
     margin-top: var(--space-2xs);
@@ -408,6 +439,7 @@
   /* Active subset gets a slightly bolder summary line — number-led so
      the wife can see the curation size at a glance. */
   .constraints-summary {
+    display: block;
     margin-top: var(--space-2xs);
     color: var(--text);
     font-size: var(--text-md);
