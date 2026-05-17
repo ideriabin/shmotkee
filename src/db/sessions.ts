@@ -24,7 +24,6 @@ export async function createSession(name: string): Promise<Session> {
     name: name.trim() || 'Без названия',
     slotRanges: { ...DEFAULT_SLOT_RANGES },
     subsetIds: null,
-    lockedIds: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -32,13 +31,12 @@ export async function createSession(name: string): Promise<Session> {
   return s;
 }
 
-/** Resolve missing `subsetIds` / `lockedIds` on sessions stored before
-    those fields were introduced. Pure — call on values read from DB. */
+/** Resolve missing `subsetIds` on sessions stored before that field was
+    introduced. Pure — call on values read from DB. */
 export function hydrateSession(s: Session): Session {
   return {
     ...s,
     subsetIds: s.subsetIds ?? null,
-    lockedIds: s.lockedIds ?? [],
   };
 }
 
@@ -58,13 +56,6 @@ export async function updateSessionSubset(
   subsetIds: string[] | null,
 ): Promise<void> {
   await db.sessions.update(id, { subsetIds, updatedAt: Date.now() });
-}
-
-export async function updateSessionLocked(
-  id: string,
-  lockedIds: string[],
-): Promise<void> {
-  await db.sessions.update(id, { lockedIds, updatedAt: Date.now() });
 }
 
 export async function touchSession(id: string): Promise<void> {

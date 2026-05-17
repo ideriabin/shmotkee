@@ -58,8 +58,16 @@
     selectedIds = next;
   }
 
-  function clearAll() {
-    selectedIds = new Set();
+  /**
+   * Сбросить scoped to the current filter — matches the asymmetric
+   * behavior of "Выбрать все в категории". Clearing across categories
+   * was almost never what the wife wanted (especially mid-curation
+   * when she's drilled into a slot to add a few more).
+   */
+  function clearFiltered() {
+    const next = new Set(selectedIds);
+    for (const it of filtered) next.delete(it.id);
+    selectedIds = next;
   }
 
   function confirm() {
@@ -103,9 +111,9 @@
       <CheckCheck size={14} strokeWidth={1.8} aria-hidden="true" />
       <span>Выбрать все{filter !== 'all' ? ' в категории' : ''}</span>
     </button>
-    <button class="bulk-btn" type="button" onclick={clearAll} disabled={selectedIds.size === 0}>
+    <button class="bulk-btn" type="button" onclick={clearFiltered} disabled={selectedIds.size === 0}>
       <Eraser size={14} strokeWidth={1.8} aria-hidden="true" />
-      <span>Сбросить</span>
+      <span>Сбросить{filter !== 'all' ? ' категорию' : ''}</span>
     </button>
   </div>
 

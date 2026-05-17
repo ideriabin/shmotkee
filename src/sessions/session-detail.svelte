@@ -134,13 +134,12 @@
   /**
    * Make this session the active one and jump to the Compose tab.
    * Clears any in-memory generator state so the new session starts
-   * fresh — slot ranges and locked items reset on first render of
-   * Compose to the persisted session values.
+   * fresh — slot ranges and subset reset on first render of Compose
+   * to the persisted session values.
    */
   function resumeWork() {
     setActiveSession(session.id);
     composeState.session = session;
-    composeState.lockedItems = [];
     composeState.tinderIndex = 0;
     composeState.tinderOpen = false;
     resetGeneration();

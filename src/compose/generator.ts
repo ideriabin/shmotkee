@@ -6,9 +6,9 @@
  * (pulls 30 per page) and the Tinder view (pulls 1 at a time) consume
  * from the same generator instance.
  *
- * Each slot is sampled independently within its [min, max] range —
- * no XOR constraint between top/bottom and full_body. Real outfits
- * sometimes mix the two (slip dress under sweater + pants).
+ * Each slot samples independently within its [min, max] range. Subset
+ * narrowing happens *outside* the generator (compose-state.applySubset
+ * filters `library` before passing it in).
  */
 
 import {
@@ -23,13 +23,12 @@ const MAX_DEDUPE_RETRIES = 20;
 
 export type GenerateOpts = {
   library: Item[];
-  locked: Item[];
   slotRanges: Record<SlotKey, SlotRange>;
   seenKeys: Set<string>;
 };
 
 export function* generate(opts: GenerateOpts): Generator<Combination> {
-  const { library, locked, slotRanges, seenKeys } = opts;
+  const { library, slotRanges, seenKeys } = opts;
 
   // Group library by slot. Unclassified items (slot === null) are silently
   // excluded from generation.
@@ -38,21 +37,10 @@ export function* generate(opts: GenerateOpts): Generator<Combination> {
     if (item.slot !== null) bySlot[item.slot].push(item);
   }
 
-  const lockedBySlot: Record<SlotKey, Item[]> = emptyBySlot();
-  for (const item of locked) {
-    if (item.slot !== null) lockedBySlot[item.slot].push(item);
-  }
-
-  const lockedIds = new Set(locked.map((i) => i.id));
-  const unlocked: Record<SlotKey, Item[]> = emptyBySlot();
-  for (const slot of SLOT_KEYS) {
-    unlocked[slot] = bySlot[slot].filter((i) => !lockedIds.has(i.id));
-  }
-
   while (true) {
     let combo: Combination | null = null;
     for (let attempt = 0; attempt < MAX_DEDUPE_RETRIES; attempt++) {
-      combo = sampleOne(unlocked, lockedBySlot, slotRanges);
+      combo = sampleOne(bySlot, slotRanges);
       if (combo && !seenKeys.has(combo.key)) break;
       combo = null;
     }
@@ -63,8 +51,7 @@ export function* generate(opts: GenerateOpts): Generator<Combination> {
 }
 
 function sampleOne(
-  unlocked: Record<SlotKey, Item[]>,
-  lockedBySlot: Record<SlotKey, Item[]>,
+  bySlot: Record<SlotKey, Item[]>,
   ranges: Record<SlotKey, SlotRange>,
 ): Combination | null {
   const result: Record<SlotKey, Item[]> = emptyBySlot();
@@ -72,31 +59,16 @@ function sampleOne(
 
   for (const slot of SLOT_KEYS) {
     const range = ranges[slot];
-    const lockedHere = lockedBySlot[slot];
-    const pool = unlocked[slot];
-    const lockedCount = lockedHere.length;
-
-    if (lockedCount >= range.max) {
-      const sliced = lockedHere.slice(0, range.max);
-      result[slot] = sortByZ(sliced);
-      totalCount += sliced.length;
+    const pool = bySlot[slot];
+    const effectiveMax = Math.min(range.max, pool.length);
+    if (effectiveMax < range.min) {
+      // Not enough items in the pool to satisfy min — skip this slot.
       continue;
     }
-
-    const effectiveMin = Math.max(0, range.min - lockedCount);
-    const effectiveMax = Math.min(range.max - lockedCount, pool.length);
-
-    if (effectiveMax < effectiveMin) {
-      result[slot] = sortByZ(lockedHere);
-      totalCount += lockedHere.length;
-      continue;
-    }
-
-    const n = randInt(effectiveMin, effectiveMax);
-    const sampled = sample(pool, n);
-    const combined = sortByZ([...lockedHere, ...sampled]);
-    result[slot] = combined;
-    totalCount += combined.length;
+    const n = randInt(range.min, effectiveMax);
+    const sampled = sortByZ(sample(pool, n));
+    result[slot] = sampled;
+    totalCount += sampled.length;
   }
 
   if (totalCount === 0) return null;

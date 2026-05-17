@@ -46,38 +46,17 @@ describe('outfit generator', () => {
       makeItem('bottom-1', 'bottom'),
       makeItem('shoes-1', 'shoes'),
     ];
-    const seen = new Set<string>();
     const results = collect({
       library,
-      locked: [],
       slotRanges: { ...DEFAULT_SLOT_RANGES, bottom: { min: 1, max: 1 } },
-      seenKeys: seen,
+      seenKeys: new Set(),
     });
     expect(results.length).toBeGreaterThan(0);
     const keys = new Set(results.map((r) => r.key));
     expect(keys.size).toBe(results.length);
   });
 
-  it('honors slot ranges (locked items always present)', () => {
-    const top = makeItem('top-1', 'top');
-    const library: Item[] = [
-      top,
-      makeItem('top-2', 'top'),
-      makeItem('bottom-1', 'bottom'),
-      makeItem('shoes-1', 'shoes'),
-    ];
-    const results = collect({
-      library,
-      locked: [top],
-      slotRanges: { ...DEFAULT_SLOT_RANGES, bottom: { min: 1, max: 1 } },
-      seenKeys: new Set(),
-    });
-    for (const c of results) {
-      expect(c.bySlot.top.map((i) => i.id)).toContain('top-1');
-    }
-  });
-
-  it('permits dress + top + bottom in the same outfit (no XOR constraint)', () => {
+  it('permits dress + top + bottom in the same outfit', () => {
     const library: Item[] = [
       makeItem('top-1', 'top'),
       makeItem('bottom-1', 'bottom'),
@@ -86,7 +65,6 @@ describe('outfit generator', () => {
     ];
     const results = collect({
       library,
-      locked: [],
       slotRanges: {
         top: { min: 1, max: 1 },
         bottom: { min: 1, max: 1 },
@@ -106,10 +84,29 @@ describe('outfit generator', () => {
     }
   });
 
+  it('"single item in slot" produces an effective lock — that item appears in every outfit', () => {
+    // Replaces the explicit lock mechanism: keep the brown boots as the
+    // only shoes in the pool, range 1-1, and the generator always picks them.
+    const library: Item[] = [
+      makeItem('top-1', 'top'),
+      makeItem('top-2', 'top'),
+      makeItem('bottom-1', 'bottom'),
+      makeItem('shoes-only', 'shoes'),
+    ];
+    const results = collect({
+      library,
+      slotRanges: { ...DEFAULT_SLOT_RANGES, bottom: { min: 1, max: 1 } },
+      seenKeys: new Set(),
+    });
+    expect(results.length).toBeGreaterThan(0);
+    for (const c of results) {
+      expect(c.bySlot.shoes.map((i) => i.id)).toEqual(['shoes-only']);
+    }
+  });
+
   it('returns no combinations when library is empty', () => {
     const results = collect({
       library: [],
-      locked: [],
       slotRanges: DEFAULT_SLOT_RANGES,
       seenKeys: new Set(),
     });

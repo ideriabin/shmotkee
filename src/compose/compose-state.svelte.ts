@@ -1,12 +1,12 @@
 /*
- * Compose tab state — active session, locked items, current generator,
+ * Compose tab state — active session, library pool, current generator,
  * accumulated results, and Tinder view position. Lives at module scope
  * so it survives tab switches within the same browsing session.
  *
  * Subset (`session.subsetIds`) restricts the generator's source pool to
- * the listed items. Locked items bypass the subset — they're an output
- * requirement, not a source filter, so they're auto-included even if
- * outside the curated pool.
+ * the listed items. There's no separate "lock" concept — to force a
+ * single item into every outfit, include just it in its slot within
+ * the subset (the generator picks 1 from a 1-item pool every time).
  */
 
 import type { Combination, Item, Session } from '../shared/types';
@@ -14,7 +14,6 @@ import { generate } from './generator';
 
 export const composeState = $state({
   session: null as Session | null,
-  lockedItems: [] as Item[],
   library: [] as Item[],
   results: [] as Combination[],
   seenKeys: new Set<string>(),
@@ -38,14 +37,9 @@ export function resetGeneration() {
 export function startGeneration(batchSize: number) {
   if (!composeState.session) return;
   resetGeneration();
-  const lib = applySubset(
-    composeState.library,
-    composeState.session.subsetIds,
-    composeState.lockedItems,
-  );
+  const lib = applySubset(composeState.library, composeState.session.subsetIds);
   currentGenerator = generate({
     library: lib,
-    locked: composeState.lockedItems,
     slotRanges: composeState.session.slotRanges,
     seenKeys: composeState.seenKeys,
   });
@@ -73,16 +67,10 @@ export function pullBatch(n: number): number {
 /**
  * Reduce the full active library to what the generator should actually see.
  * Null/empty subset → return library unchanged (full wardrobe mode).
- * Non-empty subset → only items in the subset, plus any locked items that
- * happen to live outside it (locks always bypass the source constraint).
+ * Non-empty subset → keep only items in the subset.
  */
-export function applySubset(
-  library: Item[],
-  subsetIds: string[] | null,
-  locked: Item[],
-): Item[] {
+export function applySubset(library: Item[], subsetIds: string[] | null): Item[] {
   if (!subsetIds || subsetIds.length === 0) return library;
   const pool = new Set(subsetIds);
-  const lockedIds = new Set(locked.map((i) => i.id));
-  return library.filter((it) => pool.has(it.id) || lockedIds.has(it.id));
+  return library.filter((it) => pool.has(it.id));
 }

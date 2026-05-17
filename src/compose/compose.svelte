@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Sparkles, Pin, PlusCircle, X, RefreshCw, LayoutGrid, Grid3X3, Layers } from 'lucide-svelte';
+  import { Sparkles, PlusCircle, RefreshCw, LayoutGrid, Grid3X3, Layers } from 'lucide-svelte';
   import { liveQuery } from 'dexie';
   import { db } from '../db/schema';
-  import type { Item, Session } from '../shared/types';
-  import { SLOT_LABEL_RU, type SlotKey, type SlotRange } from '../shared/slots';
+  import type { Session } from '../shared/types';
+  import { type SlotKey, type SlotRange } from '../shared/slots';
   import { appState, setActiveSession } from '../app/routes.svelte';
   import { composeState, startGeneration, pullBatch } from './compose-state.svelte';
   import {
@@ -12,16 +12,12 @@
     renameSession,
     updateSessionRanges,
     updateSessionSubset,
-    updateSessionLocked,
   } from '../db/sessions';
   import Preview from './preview.svelte';
-  import Thumb from '../library/thumb.svelte';
   import SlotRanges from './slot-ranges.svelte';
-  import LockPicker from './lock-picker.svelte';
   import SubsetPicker from './subset-picker.svelte';
   import Tinder from './tinder.svelte';
 
-  let showLockPicker = $state(false);
   let showSubsetPicker = $state(false);
   let editingName = $state(false);
   let nameDraft = $state('');
@@ -74,17 +70,8 @@
         setActiveSession(session.id);
       }
       composeState.session = session;
-      // Rehydrate locked items from the session — locks are persisted now,
-      // so switching sessions / reloading the app restores them.
-      composeState.lockedItems = await hydrateItems(session.lockedIds);
     })();
   });
-
-  async function hydrateItems(ids: string[]): Promise<Item[]> {
-    if (ids.length === 0) return [];
-    const items = await Promise.all(ids.map((id) => db.items.get(id)));
-    return items.filter((it): it is Item => !!it && !it.deletedAt);
-  }
 
   function defaultSessionName(): string {
     const d = new Date();
@@ -97,7 +84,6 @@
     const s = await createSession(defaultSessionName());
     setActiveSession(s.id);
     composeState.session = s;
-    composeState.lockedItems = [];
     composeState.results = [];
     composeState.seenKeys = new Set();
     composeState.tinderIndex = 0;
@@ -125,16 +111,6 @@
     await updateSessionRanges(composeState.session.id, next);
   }
 
-  async function setLocked(items: Item[]) {
-    composeState.lockedItems = items;
-    showLockPicker = false;
-    if (composeState.session) {
-      const ids = items.map((i) => i.id);
-      composeState.session = { ...composeState.session, lockedIds: ids };
-      await updateSessionLocked(composeState.session.id, ids);
-    }
-  }
-
   async function setSubset(ids: string[] | null) {
     showSubsetPicker = false;
     if (!composeState.session) return;
@@ -156,14 +132,6 @@
     composeState.tinderOpen = true;
   }
 
-  async function clearLocked(itemId: string) {
-    composeState.lockedItems = composeState.lockedItems.filter((i) => i.id !== itemId);
-    if (composeState.session) {
-      const ids = composeState.lockedItems.map((i) => i.id);
-      composeState.session = { ...composeState.session, lockedIds: ids };
-      await updateSessionLocked(composeState.session.id, ids);
-    }
-  }
 </script>
 
 <section class="page">
@@ -219,38 +187,6 @@
       {/if}
     </div>
 
-    <div class="constraints">
-      <div class="constraints-head">
-        <span class="constraints-label">
-          <Pin size={14} strokeWidth={1.6} aria-hidden="true" />
-          закреплено
-        </span>
-        <button class="link" type="button" onclick={() => (showLockPicker = true)}>
-          {composeState.lockedItems.length === 0 ? 'добавить' : 'изменить'}
-        </button>
-      </div>
-      {#if composeState.lockedItems.length === 0}
-        <p class="constraints-empty">Ничего не закреплено — образ соберётся случайно.</p>
-      {:else}
-        <ul class="lock-strip">
-          {#each composeState.lockedItems as item (item.id)}
-            <li>
-              <div class="lock-tile">
-                <div class="lock-photo">
-                  <Thumb blob={item.thumbnail ?? item.blob} alt={item.name} />
-                </div>
-                <button class="lock-remove" type="button" aria-label="Убрать" onclick={() => clearLocked(item.id)}>
-                  <X size={12} strokeWidth={2} aria-hidden="true" />
-                </button>
-                <p class="lock-name">{item.name}</p>
-                <p class="lock-slot">{item.slot ? SLOT_LABEL_RU[item.slot] : '—'}</p>
-              </div>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    </div>
-
     {#if composeState.session}
       <SlotRanges ranges={composeState.session.slotRanges} onChange={onRangesChanged} />
     {/if}
@@ -274,11 +210,8 @@
     <div class="results-head">
       <div class="results-meta">
         <span class="results-count">{composeState.results.length} {composeState.exhausted ? 'итого' : 'пока'}</span>
-        {#if (composeState.session?.subsetIds?.length ?? 0) > 0 || composeState.lockedItems.length > 0}
-          <span class="results-scope">
-            {#if (composeState.session?.subsetIds?.length ?? 0) > 0}· подборка {composeState.session?.subsetIds?.length}{/if}
-            {#if composeState.lockedItems.length > 0}· закреплено {composeState.lockedItems.length}{/if}
-          </span>
+        {#if (composeState.session?.subsetIds?.length ?? 0) > 0}
+          <span class="results-scope">· подборка {composeState.session?.subsetIds?.length}</span>
         {/if}
       </div>
       <div class="head-actions">
@@ -335,14 +268,6 @@
       initial={composeState.session?.subsetIds ?? null}
       onConfirm={setSubset}
       onClose={() => (showSubsetPicker = false)}
-    />
-  {/if}
-
-  {#if showLockPicker}
-    <LockPicker
-      initial={composeState.lockedItems}
-      onConfirm={setLocked}
-      onClose={() => (showLockPicker = false)}
     />
   {/if}
 
@@ -496,64 +421,6 @@
     color: var(--text-muted);
     font-size: var(--text-sm);
     margin-left: var(--space-3xs);
-  }
-  /* Stack the two constraints blocks (subset + locks) with a small gap. */
-  .controls > .constraints + .constraints {
-    margin-top: var(--space-2xs);
-  }
-  .lock-strip {
-    display: flex;
-    gap: var(--space-2xs);
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: var(--space-3xs);
-    margin: 0 calc(-1 * var(--space-3xs));
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .lock-strip::-webkit-scrollbar {
-    display: none;
-  }
-  .lock-tile {
-    width: 84px;
-    position: relative;
-  }
-  .lock-photo {
-    width: 84px;
-    height: 84px;
-    background: var(--tile);
-    padding: 6%;
-    margin-bottom: var(--space-3xs);
-    border-radius: var(--radius-3);
-  }
-  .lock-remove {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: var(--scrim);
-    color: var(--text);
-    width: 18px;
-    height: 18px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-  }
-  .lock-name {
-    font-size: var(--text-xs);
-    color: var(--text);
-    line-height: var(--lh-snug);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    line-clamp: 1;
-  }
-  .lock-slot {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: var(--track-caps);
-    margin-top: 1px;
   }
 
   .cta {
