@@ -216,6 +216,24 @@
     if (inSelection) return; // chips are drop targets instead
     filter = next;
   }
+
+  // ─── Sticky chip-strip "pinned" detection ──────────────────────────
+  // Adds a hairline shadow only once the strip is actually sticking to
+  // the top — natural-position has no separator so the hero reads as
+  // one block, scrolled-state reads as an anchored toolbar.
+  let chipStripEl = $state<HTMLElement | undefined>();
+  let chipsPinned = $state(false);
+  $effect(() => {
+    if (!chipStripEl) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry) chipsPinned = entry.intersectionRatio < 1;
+      },
+      { threshold: [1], rootMargin: '-1px 0px 0px 0px' },
+    );
+    obs.observe(chipStripEl);
+    return () => obs.disconnect();
+  });
 </script>
 
 <section class="page">
@@ -239,8 +257,19 @@
         </h1>
       {/if}
     </div>
+  </header>
 
-    <div class="chip-strip" role={inSelection ? 'toolbar' : 'tablist'}>
+  <!-- The chip-strip and triage-bar are .page children (not inside .hero) so
+       `position: sticky` on .chip-strip has the full scrollable column as its
+       containing block. Sticky can only pin while its parent's box is in the
+       stuck range; pinning it to a short .hero header would unpin after ~80px
+       of scroll. -->
+  <div
+    bind:this={chipStripEl}
+    class="chip-strip"
+    class:pinned={chipsPinned}
+    role={inSelection ? 'toolbar' : 'tablist'}
+  >
       {#if inSelection}
         {#each SLOT_KEYS as slot (slot)}
           <button class="chip chip-drop" type="button" onclick={() => batchAssign(slot)}>
@@ -297,16 +326,15 @@
       {/if}
     </div>
 
-    {#if !inSelection && filter === 'unclassified' && slotCounts.unclassified > 0}
-      <div class="triage-bar">
-        <button class="triage-btn" type="button" onclick={() => (triageOpen = true)}>
-          <ListChecks size={18} strokeWidth={1.6} aria-hidden="true" />
-          <span class="display triage-label">Разобрать по одному</span>
-          <span class="triage-count">{slotCounts.unclassified}</span>
-        </button>
-      </div>
-    {/if}
-  </header>
+  {#if !inSelection && filter === 'unclassified' && slotCounts.unclassified > 0}
+    <div class="triage-bar">
+      <button class="triage-btn" type="button" onclick={() => (triageOpen = true)}>
+        <ListChecks size={18} strokeWidth={1.6} aria-hidden="true" />
+        <span class="display triage-label">Разобрать по одному</span>
+        <span class="triage-count">{slotCounts.unclassified}</span>
+      </button>
+    </div>
+  {/if}
 
   {#if items.length === 0}
     <div class="empty">
@@ -489,7 +517,9 @@
 
   /* ─── unified chip strip ─── horizontal scrolling, single line.
      Hosts filter chips in idle mode and drop-target/destructive chips
-     in selection mode. Same DOM slot → no layout shift. */
+     in selection mode. Same DOM slot → no layout shift.
+     Sticky to the viewport top so filters stay reachable through deep
+     scroll. Backdrop matches the floating bottom nav (78% bg + blur). */
   .chip-strip {
     display: flex;
     gap: var(--space-3xs);
@@ -497,7 +527,7 @@
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding: var(--space-3xs) 0;
+    padding: var(--space-2xs) 0;
     /* let the scroll bleed to the page edges so chips don't look
        cramped against the padding */
     margin: 0 calc(-1 * var(--hero-pad));
@@ -505,10 +535,26 @@
     padding-right: var(--hero-pad);
     scroll-padding-inline: var(--hero-pad);
     -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    /* Higher opacity than the bottom nav (78%) — chips sit over warm
+       tile colors that otherwise bleed up through the blur and make
+       the strip read as a thin film. */
+    background: color-mix(in oklab, var(--bg) 92%, transparent);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    transition: box-shadow var(--dur-base) var(--ease-out);
   }
   .chip-strip::-webkit-scrollbar {
     display: none;
   }
+  .chip-strip.pinned {
+    box-shadow: 0 1px 0 var(--border-soft);
+  }
+  /* Desktop side-nav: page scrolls inside its own column. Sticky still
+     works against the document scrollport, and there's nothing to blur
+     against the side rail, so the same backdrop reads fine. */
 
   .chip {
     display: inline-flex;
