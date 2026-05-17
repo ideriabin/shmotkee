@@ -1,19 +1,28 @@
 <script lang="ts">
-  import { Sparkles, Pin, PlusCircle, X, RefreshCw, LayoutGrid, Grid3X3 } from 'lucide-svelte';
+  import { Sparkles, Pin, PlusCircle, X, RefreshCw, LayoutGrid, Grid3X3, Layers } from 'lucide-svelte';
   import { liveQuery } from 'dexie';
   import { db } from '../db/schema';
   import type { Item, Session } from '../shared/types';
   import { SLOT_LABEL_RU, type SlotKey, type SlotRange } from '../shared/slots';
   import { appState, setActiveSession } from '../app/routes.svelte';
   import { composeState, startGeneration, pullBatch } from './compose-state.svelte';
-  import { createSession, getSession, renameSession, updateSessionRanges } from '../db/sessions';
+  import {
+    createSession,
+    getSession,
+    renameSession,
+    updateSessionRanges,
+    updateSessionSubset,
+    updateSessionLocked,
+  } from '../db/sessions';
   import Preview from './preview.svelte';
   import Thumb from '../library/thumb.svelte';
   import SlotRanges from './slot-ranges.svelte';
   import LockPicker from './lock-picker.svelte';
+  import SubsetPicker from './subset-picker.svelte';
   import Tinder from './tinder.svelte';
 
   let showLockPicker = $state(false);
+  let showSubsetPicker = $state(false);
   let editingName = $state(false);
   let nameDraft = $state('');
 
@@ -65,8 +74,17 @@
         setActiveSession(session.id);
       }
       composeState.session = session;
+      // Rehydrate locked items from the session — locks are persisted now,
+      // so switching sessions / reloading the app restores them.
+      composeState.lockedItems = await hydrateItems(session.lockedIds);
     })();
   });
+
+  async function hydrateItems(ids: string[]): Promise<Item[]> {
+    if (ids.length === 0) return [];
+    const items = await Promise.all(ids.map((id) => db.items.get(id)));
+    return items.filter((it): it is Item => !!it && !it.deletedAt);
+  }
 
   function defaultSessionName(): string {
     const d = new Date();
@@ -107,9 +125,21 @@
     await updateSessionRanges(composeState.session.id, next);
   }
 
-  function setLocked(items: Item[]) {
+  async function setLocked(items: Item[]) {
     composeState.lockedItems = items;
     showLockPicker = false;
+    if (composeState.session) {
+      const ids = items.map((i) => i.id);
+      composeState.session = { ...composeState.session, lockedIds: ids };
+      await updateSessionLocked(composeState.session.id, ids);
+    }
+  }
+
+  async function setSubset(ids: string[] | null) {
+    showSubsetPicker = false;
+    if (!composeState.session) return;
+    composeState.session = { ...composeState.session, subsetIds: ids };
+    await updateSessionSubset(composeState.session.id, ids);
   }
 
   function generate() {
@@ -126,8 +156,13 @@
     composeState.tinderOpen = true;
   }
 
-  function clearLocked(itemId: string) {
+  async function clearLocked(itemId: string) {
     composeState.lockedItems = composeState.lockedItems.filter((i) => i.id !== itemId);
+    if (composeState.session) {
+      const ids = composeState.lockedItems.map((i) => i.id);
+      composeState.session = { ...composeState.session, lockedIds: ids };
+      await updateSessionLocked(composeState.session.id, ids);
+    }
   }
 </script>
 
@@ -159,11 +194,31 @@
       <span class="display">Собрать образ</span>
     </h1>
     <p class="hint">
-      Закрепи что-то, что точно должно быть, выставь диапазоны — остальное подберу.
+      Сузь подборку или закрепи нужное — остальное подберу.
     </p>
   </header>
 
   <div class="controls">
+    <div class="constraints">
+      <div class="constraints-head">
+        <span class="constraints-label">
+          <Layers size={14} strokeWidth={1.6} aria-hidden="true" />
+          подборка
+        </span>
+        <button class="link" type="button" onclick={() => (showSubsetPicker = true)}>
+          {composeState.session?.subsetIds && composeState.session.subsetIds.length > 0 ? 'изменить' : 'добавить'}
+        </button>
+      </div>
+      {#if !composeState.session?.subsetIds || composeState.session.subsetIds.length === 0}
+        <p class="constraints-empty">Из всего гардероба.</p>
+      {:else}
+        <p class="constraints-summary">
+          <strong>{composeState.session.subsetIds.length}</strong>
+          <span class="constraints-summary-suffix">из {composeState.library.length} в гардеробе</span>
+        </p>
+      {/if}
+    </div>
+
     <div class="constraints">
       <div class="constraints-head">
         <span class="constraints-label">
@@ -175,7 +230,7 @@
         </button>
       </div>
       {#if composeState.lockedItems.length === 0}
-        <p class="constraints-empty">Ничего не закреплено — сгенерится случайный образ.</p>
+        <p class="constraints-empty">Ничего не закреплено — образ соберётся случайно.</p>
       {:else}
         <ul class="lock-strip">
           {#each composeState.lockedItems as item (item.id)}
@@ -217,7 +272,15 @@
     </div>
   {:else if composeState.results.length > 0}
     <div class="results-head">
-      <span class="results-count">{composeState.results.length} {composeState.exhausted ? 'итого' : 'пока'}</span>
+      <div class="results-meta">
+        <span class="results-count">{composeState.results.length} {composeState.exhausted ? 'итого' : 'пока'}</span>
+        {#if (composeState.session?.subsetIds?.length ?? 0) > 0 || composeState.lockedItems.length > 0}
+          <span class="results-scope">
+            {#if (composeState.session?.subsetIds?.length ?? 0) > 0}· подборка {composeState.session?.subsetIds?.length}{/if}
+            {#if composeState.lockedItems.length > 0}· закреплено {composeState.lockedItems.length}{/if}
+          </span>
+        {/if}
+      </div>
       <div class="head-actions">
         <div class="density-toggle" role="group" aria-label="Размер сетки">
           <button
@@ -265,6 +328,14 @@
     {:else}
       <p class="exhausted">варианты кончились — попробуй другие закреплённые вещи или диапазоны</p>
     {/if}
+  {/if}
+
+  {#if showSubsetPicker}
+    <SubsetPicker
+      initial={composeState.session?.subsetIds ?? null}
+      onConfirm={setSubset}
+      onClose={() => (showSubsetPicker = false)}
+    />
   {/if}
 
   {#if showLockPicker}
@@ -409,6 +480,27 @@
     margin-top: var(--space-2xs);
     line-height: var(--lh-snug);
   }
+  /* Active subset gets a slightly bolder summary line — number-led so
+     the wife can see the curation size at a glance. */
+  .constraints-summary {
+    margin-top: var(--space-2xs);
+    color: var(--text);
+    font-size: var(--text-md);
+    line-height: var(--lh-snug);
+  }
+  .constraints-summary strong {
+    font-weight: var(--w-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+  .constraints-summary-suffix {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin-left: var(--space-3xs);
+  }
+  /* Stack the two constraints blocks (subset + locks) with a small gap. */
+  .controls > .constraints + .constraints {
+    margin-top: var(--space-2xs);
+  }
   .lock-strip {
     display: flex;
     gap: var(--space-2xs);
@@ -499,13 +591,28 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: var(--space-sm);
     margin-bottom: var(--space-2xs);
+  }
+  .results-meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3xs);
+    flex-wrap: wrap;
+    min-width: 0;
   }
   .results-count {
     font-size: var(--text-xs);
     letter-spacing: var(--track-caps);
     text-transform: uppercase;
     color: var(--text-muted);
+  }
+  .results-scope {
+    font-size: var(--text-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Density-driven column count. Cozy = inspection mode (big tiles);

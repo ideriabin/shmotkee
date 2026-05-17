@@ -8,11 +8,13 @@ function uid(): string {
 }
 
 export async function listSessions(): Promise<Session[]> {
-  return db.sessions.orderBy('updatedAt').reverse().toArray();
+  const all = await db.sessions.orderBy('updatedAt').reverse().toArray();
+  return all.map(hydrateSession);
 }
 
 export async function getSession(id: string): Promise<Session | undefined> {
-  return db.sessions.get(id);
+  const s = await db.sessions.get(id);
+  return s ? hydrateSession(s) : undefined;
 }
 
 export async function createSession(name: string): Promise<Session> {
@@ -21,11 +23,23 @@ export async function createSession(name: string): Promise<Session> {
     id: uid(),
     name: name.trim() || 'Без названия',
     slotRanges: { ...DEFAULT_SLOT_RANGES },
+    subsetIds: null,
+    lockedIds: [],
     createdAt: now,
     updatedAt: now,
   };
   await db.sessions.add(s);
   return s;
+}
+
+/** Resolve missing `subsetIds` / `lockedIds` on sessions stored before
+    those fields were introduced. Pure — call on values read from DB. */
+export function hydrateSession(s: Session): Session {
+  return {
+    ...s,
+    subsetIds: s.subsetIds ?? null,
+    lockedIds: s.lockedIds ?? [],
+  };
 }
 
 export async function renameSession(id: string, name: string): Promise<void> {
@@ -37,6 +51,20 @@ export async function updateSessionRanges(
   slotRanges: Session['slotRanges'],
 ): Promise<void> {
   await db.sessions.update(id, { slotRanges, updatedAt: Date.now() });
+}
+
+export async function updateSessionSubset(
+  id: string,
+  subsetIds: string[] | null,
+): Promise<void> {
+  await db.sessions.update(id, { subsetIds, updatedAt: Date.now() });
+}
+
+export async function updateSessionLocked(
+  id: string,
+  lockedIds: string[],
+): Promise<void> {
+  await db.sessions.update(id, { lockedIds, updatedAt: Date.now() });
 }
 
 export async function touchSession(id: string): Promise<void> {

@@ -27,6 +27,18 @@ export type Session = {
   id: string;
   name: string;
   slotRanges: Record<SlotKey, SlotRange>;
+  /**
+   * Подборка — when non-null, the generator only draws from these item IDs
+   * (a "capsule" or "mood"). Null means the full active wardrobe.
+   * Locked items bypass the subset (auto-included even if outside).
+   */
+  subsetIds: string[] | null;
+  /**
+   * Закреплено — these item IDs must appear in every generated outfit.
+   * Orthogonal to subsetIds: a lock is an output requirement, subset is a
+   * source restriction.
+   */
+  lockedIds: string[];
   createdAt: number;
   updatedAt: number;
 };

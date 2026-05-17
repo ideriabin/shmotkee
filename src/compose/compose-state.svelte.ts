@@ -2,6 +2,11 @@
  * Compose tab state — active session, locked items, current generator,
  * accumulated results, and Tinder view position. Lives at module scope
  * so it survives tab switches within the same browsing session.
+ *
+ * Subset (`session.subsetIds`) restricts the generator's source pool to
+ * the listed items. Locked items bypass the subset — they're an output
+ * requirement, not a source filter, so they're auto-included even if
+ * outside the curated pool.
  */
 
 import type { Combination, Item, Session } from '../shared/types';
@@ -33,8 +38,13 @@ export function resetGeneration() {
 export function startGeneration(batchSize: number) {
   if (!composeState.session) return;
   resetGeneration();
+  const lib = applySubset(
+    composeState.library,
+    composeState.session.subsetIds,
+    composeState.lockedItems,
+  );
   currentGenerator = generate({
-    library: composeState.library,
+    library: lib,
     locked: composeState.lockedItems,
     slotRanges: composeState.session.slotRanges,
     seenKeys: composeState.seenKeys,
@@ -58,4 +68,21 @@ export function pullBatch(n: number): number {
     pulled++;
   }
   return pulled;
+}
+
+/**
+ * Reduce the full active library to what the generator should actually see.
+ * Null/empty subset → return library unchanged (full wardrobe mode).
+ * Non-empty subset → only items in the subset, plus any locked items that
+ * happen to live outside it (locks always bypass the source constraint).
+ */
+export function applySubset(
+  library: Item[],
+  subsetIds: string[] | null,
+  locked: Item[],
+): Item[] {
+  if (!subsetIds || subsetIds.length === 0) return library;
+  const pool = new Set(subsetIds);
+  const lockedIds = new Set(locked.map((i) => i.id));
+  return library.filter((it) => pool.has(it.id) || lockedIds.has(it.id));
 }
