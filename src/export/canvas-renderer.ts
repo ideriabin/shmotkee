@@ -1,13 +1,14 @@
 /*
  * Render an outfit combination to a 1080×1350 PNG Blob.
  *
- * Layout: outfit zone 1080×1080 (slot rects mirror SLOT_RECT exactly so
- * on-screen and export geometries match), caption zone 1080×270 with a
- * one-line-per-slot listing of item names.
+ * Layout mirrors preview.svelte exactly: three horizontal bands
+ * (upper / middle / lower) at flex ratios 4 / 3 / 2.5. Items inside
+ * a band sit side-by-side, evenly distributed, no overlap. The
+ * caption zone below lists each used slot's items by name.
  */
 
-import { SLOT_RECT, SLOT_RENDER_ORDER, SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
-import type { Combination } from '../shared/types';
+import { SLOT_RENDER_ORDER, SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
+import type { Combination, Item } from '../shared/types';
 
 const OUT_W = 1080;
 const OUT_H = 1350;
@@ -20,10 +21,19 @@ const CAPTION_TEXT = '#E6E1E2';
 const CAPTION_MUTED = '#7E7378';
 const ITEM_SHADOW = 'rgba(0, 0, 0, 0.45)';
 
+const UPPER_SLOTS: SlotKey[] = ['top', 'outerwear', 'full_body'];
+const MIDDLE_SLOTS: SlotKey[] = ['bottom'];
+const LOWER_SLOTS: SlotKey[] = ['shoes', 'accessories', 'other'];
+
+const UPPER_FLEX = 4;
+const MIDDLE_FLEX = 3;
+const LOWER_FLEX = 2.5;
+
+const PADDING_PCT = 0.04;
+const BAND_GAP_PCT = 0.02;
+const CELL_GAP_PCT = 0.03;
+
 export async function renderOutfitToPng(combo: Combination): Promise<Blob> {
-  // Make sure Onest is loaded before the canvas renders captions —
-  // canvas.fillText silently falls back to a generic sans if the font
-  // hasn't arrived yet.
   if (typeof document !== 'undefined' && document.fonts?.ready) {
     await document.fonts.ready;
   }
@@ -42,41 +52,85 @@ export async function renderOutfitToPng(combo: Combination): Promise<Blob> {
   if (!ctx) throw new Error('2d context unavailable');
   ctx.imageSmoothingQuality = 'high';
 
-  // Background
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, OUT_W, OUT_H);
 
-  // Outfit zone — slots back-to-front, items sorted by zPriority within each slot.
-  // We compute slot rects in canvas pixels by mapping percentages onto OUT_W × OUTFIT_H.
-  for (const slot of SLOT_RENDER_ORDER) {
-    const items = combo.bySlot[slot as SlotKey] ?? [];
-    if (items.length === 0) continue;
-    const rect = SLOT_RECT[slot as SlotKey];
-    const sx = (rect.x / 100) * OUT_W;
-    const sy = (rect.y / 100) * OUTFIT_H;
-    const sw = (rect.w / 100) * OUT_W;
-    const sh = (rect.h / 100) * OUTFIT_H;
+  await drawBands(ctx, combo);
+  drawCaption(ctx, combo);
 
-    for (const item of items) {
-      let bitmap: ImageBitmap | null = null;
-      try {
-        bitmap = await createImageBitmap(item.blob);
-        const fitted = fitContain(bitmap.width, bitmap.height, sw, sh);
-        const dx = sx + (sw - fitted.w) / 2;
-        const dy = sy + (sh - fitted.h) / 2;
-        ctx.save();
-        ctx.shadowColor = ITEM_SHADOW;
-        ctx.shadowBlur = 30;
-        ctx.shadowOffsetY = 8;
-        ctx.drawImage(bitmap, dx, dy, fitted.w, fitted.h);
-        ctx.restore();
-      } finally {
-        bitmap?.close();
-      }
+  if (typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
+    return await (canvas as unknown as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+  }
+  return await new Promise<Blob>((resolve, reject) => {
+    (canvas as HTMLCanvasElement).toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('toBlob returned null'))),
+      'image/png',
+    );
+  });
+}
+
+async function drawBands(ctx: CanvasRenderingContext2D, combo: Combination): Promise<void> {
+  const upper = gather(UPPER_SLOTS, combo);
+  const middle = gather(MIDDLE_SLOTS, combo);
+  const lower = gather(LOWER_SLOTS, combo);
+
+  const bands: { items: Item[]; flex: number }[] = [];
+  if (upper.length > 0) bands.push({ items: upper, flex: UPPER_FLEX });
+  if (middle.length > 0) bands.push({ items: middle, flex: MIDDLE_FLEX });
+  if (lower.length > 0) bands.push({ items: lower, flex: LOWER_FLEX });
+
+  if (bands.length === 0) return;
+
+  const padX = OUT_W * PADDING_PCT;
+  const padY = OUTFIT_H * PADDING_PCT;
+  const bandGap = OUTFIT_H * BAND_GAP_PCT;
+  const totalGap = bandGap * (bands.length - 1);
+  const availableH = OUTFIT_H - padY * 2 - totalGap;
+  const availableW = OUT_W - padX * 2;
+  const totalFlex = bands.reduce((s, b) => s + b.flex, 0);
+
+  let y = padY;
+  for (const band of bands) {
+    const bandH = (band.flex / totalFlex) * availableH;
+    await drawBand(ctx, band.items, padX, y, availableW, bandH);
+    y += bandH + bandGap;
+  }
+}
+
+async function drawBand(
+  ctx: CanvasRenderingContext2D,
+  items: Item[],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): Promise<void> {
+  const cellGap = w * CELL_GAP_PCT;
+  const totalGap = cellGap * (items.length - 1);
+  const cellW = (w - totalGap) / items.length;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]!;
+    const cellX = x + i * (cellW + cellGap);
+    let bitmap: ImageBitmap | null = null;
+    try {
+      bitmap = await createImageBitmap(item.blob);
+      const fitted = fitContain(bitmap.width, bitmap.height, cellW, h);
+      const dx = cellX + (cellW - fitted.w) / 2;
+      const dy = y + (h - fitted.h) / 2;
+      ctx.save();
+      ctx.shadowColor = ITEM_SHADOW;
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 8;
+      ctx.drawImage(bitmap, dx, dy, fitted.w, fitted.h);
+      ctx.restore();
+    } finally {
+      bitmap?.close();
     }
   }
+}
 
-  // Caption zone
+function drawCaption(ctx: CanvasRenderingContext2D, combo: Combination): void {
   ctx.fillStyle = CAPTION_BG;
   ctx.fillRect(0, OUTFIT_H, OUT_W, CAPTION_H);
 
@@ -105,16 +159,15 @@ export async function renderOutfitToPng(combo: Combination): Promise<Blob> {
     y += lineH;
     if (y > OUT_H - 40) break;
   }
+}
 
-  if (typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
-    return await (canvas as unknown as OffscreenCanvas).convertToBlob({ type: 'image/png' });
+function gather(slots: SlotKey[], combo: Combination): Item[] {
+  const out: Item[] = [];
+  for (const slot of slots) {
+    const items = combo.bySlot[slot] ?? [];
+    out.push(...items);
   }
-  return await new Promise<Blob>((resolve, reject) => {
-    (canvas as HTMLCanvasElement).toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('toBlob returned null'))),
-      'image/png',
-    );
-  });
+  return out;
 }
 
 function fitContain(srcW: number, srcH: number, dstW: number, dstH: number) {

@@ -1,20 +1,23 @@
 <script lang="ts">
-  import { X, FolderOpen, FileImage } from 'lucide-svelte';
+  import { X, FolderOpen, FileImage, Wand2 } from 'lucide-svelte';
   import { createItem } from '../db/items';
   import { SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
   import { generateThumbnail, filenameStem } from './thumbnail';
+  import { trimTransparent } from './trim';
+  import { reprocessAllItems } from './reprocess';
 
   let {
     onClose,
     defaultSlot = null,
   }: { onClose: () => void; defaultSlot?: SlotKey | null } = $props();
 
-  type Step = 'source' | 'importing' | 'done';
+  type Step = 'source' | 'importing' | 'reprocessing' | 'done';
 
   let step = $state<Step>('source');
   let totalCount = $state(0);
   let doneCount = $state(0);
   let failedCount = $state(0);
+  let changedCount = $state(0);
   let lastError = $state<string>('');
 
   // Folder picker only available on desktop browsers that support webkitdirectory.
@@ -67,11 +70,14 @@
 
     const tasks = files.map(async (file) => {
       try {
-        const thumb = await generateThumbnail(file);
+        // Trim transparent margin first; regenerate thumbnail from the
+        // trimmed source so both stored blobs are in sync.
+        const trimmed = await trimTransparent(file);
+        const thumb = await generateThumbnail(trimmed);
         await createItem({
           name: filenameStem(file.name),
           slot: defaultSlot,
-          blob: file,
+          blob: trimmed,
           thumbnail: thumb,
         });
       } catch (err) {
@@ -83,6 +89,21 @@
     });
 
     await Promise.all(tasks);
+    step = 'done';
+  }
+
+  async function startReprocess() {
+    step = 'reprocessing';
+    totalCount = 0;
+    doneCount = 0;
+    failedCount = 0;
+    changedCount = 0;
+    for await (const p of reprocessAllItems()) {
+      totalCount = p.total;
+      doneCount = p.done;
+      failedCount = p.failed;
+      changedCount = p.changed;
+    }
     step = 'done';
   }
 
@@ -149,6 +170,12 @@
           <p class="error">{lastError}</p>
         {/if}
 
+        <button class="tertiary" type="button" onclick={startReprocess}>
+          <Wand2 size={16} strokeWidth={1.6} aria-hidden="true" />
+          <span>Перепроверить картинки</span>
+          <span class="tertiary-hint">Обрежет прозрачные поля у уже загруженных вещей</span>
+        </button>
+
         <input
           bind:this={fileInput}
           type="file"
@@ -165,8 +192,11 @@
           onchange={onFilesChosen}
           style="display:none"
         />
-      {:else if step === 'importing'}
+      {:else if step === 'importing' || step === 'reprocessing'}
         <div class="progress">
+          <p class="progress-label">
+            {#if step === 'reprocessing'}Перепроверяю{:else}Загружаю{/if}
+          </p>
           <p class="progress-count">{doneCount} / {totalCount}</p>
           <div class="bar">
             <div class="bar-fill" style:width="{(doneCount / Math.max(totalCount, 1)) * 100}%"></div>
@@ -175,16 +205,24 @@
       {:else}
         <div class="done">
           <p class="done-stat">
-            Загружено: <strong>{doneCount - failedCount}</strong>
+            {#if changedCount > 0 || (totalCount > 0 && doneCount > 0 && doneCount === changedCount + failedCount + (totalCount - changedCount - failedCount))}
+              {#if changedCount > 0}
+                Обновлено: <strong>{changedCount}</strong>
+              {:else}
+                Загружено: <strong>{doneCount - failedCount}</strong>
+              {/if}
+            {:else}
+              Загружено: <strong>{doneCount - failedCount}</strong>
+            {/if}
             {#if failedCount > 0}
               <br />Не получилось: <strong>{failedCount}</strong>
             {/if}
           </p>
-          {#if defaultSlot}
+          {#if defaultSlot && changedCount === 0}
             <p class="done-hint">
               Вещи добавлены в «{SLOT_LABEL_RU[defaultSlot]}».
             </p>
-          {:else}
+          {:else if changedCount === 0 && doneCount > 0 && !defaultSlot}
             <p class="done-hint">
               Все вещи помечены «Без слота». В гардеробе можно выделить нужные и разложить по категориям.
             </p>
@@ -324,9 +362,51 @@
     font-size: var(--text-sm);
   }
 
+  /* Tertiary action: re-trim already-uploaded items. Sub-button-grade
+     affordance — visible but quieter than the primary upload tiles. */
+  .tertiary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--space-2xs);
+    row-gap: 2px;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    margin-top: var(--space-sm);
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-2);
+    color: var(--text);
+    text-align: left;
+    transition: background var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out);
+  }
+  .tertiary > :global(svg) {
+    grid-row: span 2;
+    color: var(--text-muted);
+  }
+  .tertiary-hint {
+    grid-column: 2;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .tertiary:hover {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+  .tertiary:active {
+    background: var(--surface-3);
+    transition-duration: 60ms;
+  }
+
   .progress {
     text-align: center;
     padding: var(--space-md) 0;
+  }
+  .progress-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2xs);
+    text-transform: uppercase;
+    letter-spacing: var(--track-caps);
   }
   .progress-count {
     font-family: var(--font-display);

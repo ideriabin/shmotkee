@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Sparkles, Pin, PlusCircle, X, RefreshCw } from 'lucide-svelte';
+  import { Sparkles, Pin, PlusCircle, X, RefreshCw, LayoutGrid, Grid3X3 } from 'lucide-svelte';
   import { liveQuery } from 'dexie';
   import { db } from '../db/schema';
   import type { Item, Session } from '../shared/types';
@@ -16,6 +16,25 @@
   let showLockPicker = $state(false);
   let editingName = $state(false);
   let nameDraft = $state('');
+
+  // Grid density: cozy = bigger tiles, compact = denser. Persisted globally
+  // so the wife's preference survives reloads and tab switches. localStorage
+  // is read once on init; subsequent changes write through immediately.
+  type GridDensity = 'cozy' | 'compact';
+  const DENSITY_KEY = 'shmotkee:grid-density';
+  function loadDensity(): GridDensity {
+    if (typeof localStorage === 'undefined') return 'cozy';
+    return localStorage.getItem(DENSITY_KEY) === 'compact' ? 'compact' : 'cozy';
+  }
+  let density = $state<GridDensity>(loadDensity());
+  function setDensity(d: GridDensity) {
+    density = d;
+    try {
+      localStorage.setItem(DENSITY_KEY, d);
+    } catch {
+      // Private mode / storage disabled — fail open, state still works in-session.
+    }
+  }
 
   // Library: live-subscribe so the generator always has fresh data.
   $effect(() => {
@@ -195,10 +214,34 @@
   {:else if composeState.results.length > 0}
     <div class="results-head">
       <span class="results-count">{composeState.results.length} {composeState.exhausted ? 'итого' : 'пока'}</span>
-      <button class="link" type="button" onclick={() => openTinderAt(0)}>смотреть по одному →</button>
+      <div class="head-actions">
+        <div class="density-toggle" role="group" aria-label="Размер сетки">
+          <button
+            class="density-btn"
+            class:active={density === 'cozy'}
+            aria-pressed={density === 'cozy'}
+            type="button"
+            aria-label="Крупные карточки"
+            onclick={() => setDensity('cozy')}
+          >
+            <LayoutGrid size={16} strokeWidth={1.6} aria-hidden="true" />
+          </button>
+          <button
+            class="density-btn"
+            class:active={density === 'compact'}
+            aria-pressed={density === 'compact'}
+            type="button"
+            aria-label="Мелкие карточки"
+            onclick={() => setDensity('compact')}
+          >
+            <Grid3X3 size={16} strokeWidth={1.6} aria-hidden="true" />
+          </button>
+        </div>
+        <button class="link" type="button" onclick={() => openTinderAt(0)}>смотреть по одному →</button>
+      </div>
     </div>
 
-    <ul class="results">
+    <ul class="results" class:density-cozy={density === 'cozy'} class:density-compact={density === 'compact'}>
       {#each composeState.results as combo, idx (combo.key)}
         <li>
           <button class="result" type="button" onclick={() => openTinderAt(idx)}>
@@ -461,19 +504,61 @@
     color: var(--text-muted);
   }
 
+  /* Density-driven column count. Cozy = inspection mode (big tiles);
+     compact = scan mode (more outfits visible at once). Each breakpoint
+     bumps by one column up to a wide-desktop cap. */
   .results {
     display: grid;
     gap: var(--space-2xs);
-    grid-template-columns: repeat(2, 1fr);
   }
   @media (min-width: 600px) {
-    .results { grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
+    .results { gap: var(--space-sm); }
   }
-  @media (min-width: 900px) {
-    .results { grid-template-columns: repeat(4, 1fr); }
+  .results.density-cozy { grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 1200px) {
+    .results.density-cozy { grid-template-columns: repeat(3, 1fr); }
+  }
+  .results.density-compact { grid-template-columns: repeat(3, 1fr); }
+  @media (min-width: 600px) {
+    .results.density-compact { grid-template-columns: repeat(4, 1fr); }
   }
   @media (min-width: 1200px) {
-    .results { grid-template-columns: repeat(5, 1fr); }
+    .results.density-compact { grid-template-columns: repeat(5, 1fr); }
+  }
+
+  /* Toggle group for the density switch — small icon-button pair styled
+     as a single segmented control. Sits in the results-head alongside
+     the Tinder link, so all "what to do with these results" controls
+     cluster on the right. */
+  .head-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .density-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .density-btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 28px;
+    color: var(--text-muted);
+    background: transparent;
+    transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+  }
+  .density-btn.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .density-btn:hover:not(.active) {
+    color: var(--text);
+  }
+  .density-btn:active:not(.active) {
+    background: var(--surface);
   }
   .result {
     width: 100%;

@@ -1,10 +1,10 @@
 /*
- * Slot definitions: keys, labels, and render geometry.
+ * Slot definitions: keys, labels, and outfit-composition metadata.
  *
- * Geometry is expressed as % of the outfit-canvas rectangle (which has a
- * fixed 4:5 aspect ratio). Both the DOM preview and the Canvas exporter
- * read from this single source of truth, so on-screen and exported
- * positions stay in lockstep.
+ * Outfit render uses a flat-lay band layout (see preview.svelte) — no
+ * per-slot geometry needed here. SLOT_RENDER_ORDER survives because the
+ * generator's dedupe key (and the exporter's caption) iterate slots in
+ * a canonical order.
  */
 
 export const SLOT_KEYS = [
@@ -40,36 +40,9 @@ export const SLOT_LABEL_RU_PLURAL: Record<SlotKey, string> = {
 };
 
 /**
- * Geometry of each slot in the outfit canvas. Origin is top-left.
- * The canvas itself is 4:5 (width:height) — these percentages are
- * within that rectangle.
- *
- * z-order (back → front): bottom → full_body → top → outerwear → accessories.
- * shoes sit in their own band at the bottom and don't overlap.
- * other is a freeform top layer above accessories.
- */
-export type SlotRect = {
-  x: number; // % from left
-  y: number; // % from top
-  w: number; // % width
-  h: number; // % height
-  z: number; // z-index basis (within-slot zPriority added)
-};
-
-export const SLOT_RECT: Record<SlotKey, SlotRect> = {
-  bottom: { x: 18, y: 38, w: 64, h: 36, z: 10 },
-  full_body: { x: 18, y: 10, w: 64, h: 64, z: 15 },
-  top: { x: 16, y: 10, w: 68, h: 38, z: 20 },
-  outerwear: { x: 8, y: 6, w: 84, h: 50, z: 30 },
-  shoes: { x: 26, y: 76, w: 48, h: 18, z: 25 },
-  accessories: { x: 60, y: 4, w: 36, h: 32, z: 40 },
-  other: { x: 4, y: 56, w: 30, h: 30, z: 50 },
-};
-
-/**
- * The on-screen render order — items drawn back-to-front follow this list.
- * (CSS z-index handles this in the DOM renderer; Canvas drawImage calls
- * follow this array in order in the exporter.)
+ * Canonical iteration order used by the generator's dedupe key and the
+ * exporter's caption block. Render order in the DOM and canvas is driven
+ * by band assignment in preview.svelte / canvas-renderer.ts, not by this.
  */
 export const SLOT_RENDER_ORDER: SlotKey[] = [
   'bottom',
