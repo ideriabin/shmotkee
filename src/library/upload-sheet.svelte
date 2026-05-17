@@ -100,8 +100,12 @@
   role="dialog"
   aria-modal="true"
   aria-labelledby="upload-title"
+  tabindex="-1"
   onclick={(e) => {
     if (e.target === e.currentTarget) close();
+  }}
+  onkeydown={(e) => {
+    if (e.key === 'Escape') close();
   }}
 >
   <div class="sheet" class:closing role="document">
@@ -318,29 +322,6 @@
   .source-hint {
     color: var(--text-muted);
     font-size: var(--text-sm);
-  }
-
-  .slot-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    background: var(--border-soft);
-    border-radius: var(--radius-2);
-    overflow: hidden;
-  }
-  .slot-row {
-    width: 100%;
-    background: var(--surface-2);
-    padding: var(--space-sm) var(--space-md);
-    text-align: left;
-    transition: background var(--dur-quick) var(--ease-out);
-  }
-  .slot-row:hover {
-    background: var(--surface-3);
-  }
-  .slot-name {
-    font-size: var(--text-lg);
-    color: var(--text);
   }
 
   .progress {

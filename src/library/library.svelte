@@ -396,8 +396,13 @@
     <div
       class="action-overlay"
       role="alertdialog"
+      aria-modal="true"
+      tabindex="-1"
       onclick={(e) => {
         if (e.target === e.currentTarget) showDeleteConfirm = false;
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Escape') showDeleteConfirm = false;
       }}
     >
       <div class="action-sheet">

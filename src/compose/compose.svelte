@@ -113,6 +113,7 @@
     <div class="session-bar">
       <span class="session-eyebrow">сессия</span>
       {#if editingName}
+        <!-- svelte-ignore a11y_autofocus -->
         <input
           class="session-input"
           autofocus

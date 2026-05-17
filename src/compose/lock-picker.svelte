@@ -17,6 +17,8 @@
   } = $props();
 
   let items = $state<Item[]>([]);
+  // Snapshot of `initial` at mount is intentional — parent re-mounts on open.
+  // svelte-ignore state_referenced_locally
   let selectedIds = $state(new Set(initial.map((i) => i.id)));
   let filter = $state<'all' | SlotKey>('all');
 

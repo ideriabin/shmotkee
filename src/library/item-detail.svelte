@@ -7,8 +7,13 @@
 
   let { item, onClose }: { item: Item; onClose: () => void } = $props();
 
+  // Local draft state: parent mounts a fresh component per open, so the
+  // initial-snapshot semantics here are intentional.
+  // svelte-ignore state_referenced_locally
   let name = $state(item.name);
+  // svelte-ignore state_referenced_locally
   let slot = $state<SlotKey | null>(item.slot);
+  // svelte-ignore state_referenced_locally
   let zPriority = $state(item.zPriority);
   let confirmDelete = $state(false);
   let outfitsUsing = $state(0);
@@ -122,8 +127,13 @@
     <div
       class="action-overlay"
       role="alertdialog"
+      aria-modal="true"
+      tabindex="-1"
       onclick={(e) => {
         if (e.target === e.currentTarget) confirmDelete = false;
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Escape') confirmDelete = false;
       }}
     >
       <div class="action-sheet">

@@ -110,6 +110,8 @@
 
   <div
     class="stage"
+    role="application"
+    aria-label="Карточки образов. Свайп влево или вправо для выбора"
     onpointerdown={onPointerDown}
     onpointermove={onPointerMove}
     onpointerup={onPointerUp}

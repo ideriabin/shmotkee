@@ -20,9 +20,9 @@
 </script>
 
 <nav class="nav" aria-label="Главная навигация">
-  <a class="wordmark" href="#" tabindex="-1" aria-hidden="true">
+  <span class="wordmark" aria-hidden="true">
     <span class="wordmark-strong">Shmotkee</span>
-  </a>
+  </span>
 
   <ul class="tabs" style:--tab-index={tabIndex}>
     {#each items as item (item.id)}

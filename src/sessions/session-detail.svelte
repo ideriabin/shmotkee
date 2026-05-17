@@ -156,6 +156,7 @@
     <div class="head-title">
       <span class="head-eyebrow">сессия</span>
       {#if editingName}
+        <!-- svelte-ignore a11y_autofocus -->
         <input
           class="head-input"
           autofocus
@@ -228,8 +229,13 @@
     <div
       class="action-overlay"
       role="alertdialog"
+      aria-modal="true"
+      tabindex="-1"
       onclick={(e) => {
         if (e.target === e.currentTarget) showPostExport = false;
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Escape') showPostExport = false;
       }}
     >
       <div class="action-sheet">
@@ -248,8 +254,13 @@
     <div
       class="action-overlay"
       role="alertdialog"
+      aria-modal="true"
+      tabindex="-1"
       onclick={(e) => {
         if (e.target === e.currentTarget) showDeleteConfirm = false;
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Escape') showDeleteConfirm = false;
       }}
     >
       <div class="action-sheet">
