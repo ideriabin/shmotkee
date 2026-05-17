@@ -8,12 +8,30 @@ function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+/**
+ * Active (non-deleted) items — what the library, pickers, generator,
+ * and triage flows should see. Soft-deleted items live alongside in the
+ * same table but are filtered out here.
+ */
 export async function listItems(): Promise<Item[]> {
-  return db.items.orderBy('createdAt').reverse().toArray();
+  return db.items.orderBy('createdAt').reverse().filter((it) => !it.deletedAt).toArray();
+}
+
+export async function listDeletedItems(): Promise<Item[]> {
+  return db.items
+    .orderBy('createdAt')
+    .reverse()
+    .filter((it) => !!it.deletedAt)
+    .toArray();
 }
 
 export async function listItemsBySlot(slot: SlotKey): Promise<Item[]> {
-  return db.items.where('slot').equals(slot).reverse().sortBy('createdAt');
+  return db.items
+    .where('slot')
+    .equals(slot)
+    .filter((it) => !it.deletedAt)
+    .reverse()
+    .sortBy('createdAt');
 }
 
 export async function getItem(id: string): Promise<Item | undefined> {
@@ -35,6 +53,7 @@ export async function createItem(input: {
     blob: input.blob,
     thumbnail: input.thumbnail,
     createdAt: Date.now(),
+    deletedAt: null,
   };
   await db.items.add(item);
   // First item created in this session-of-the-app: ask for durable storage.
@@ -91,11 +110,55 @@ export async function restoreItemSlots(snapshot: Map<string, SlotKey | null>): P
 }
 
 /**
- * Delete an item and cascade through saved outfits:
- * — strip the item id from each affected outfit's itemIds
- * — if that leaves the outfit empty, delete the outfit row
+ * Soft delete — sets deletedAt, hiding the item from active views.
+ * Saved outfits that reference it still render normally (look-up by id
+ * succeeds since the item row is still there). User can restore from
+ * the trash, or purge to actually drop the row + cascade through outfits.
  */
-export async function deleteItem(id: string): Promise<{ outfitsAffected: number; outfitsRemoved: number }> {
+export async function softDeleteItem(id: string): Promise<void> {
+  await db.items.update(id, { deletedAt: Date.now() });
+}
+
+export async function softDeleteItems(ids: string[]): Promise<void> {
+  const now = Date.now();
+  await db.transaction('rw', db.items, async () => {
+    for (const id of ids) {
+      await db.items.update(id, { deletedAt: now });
+    }
+  });
+}
+
+/**
+ * Bulk-soft-delete: same shape as snapshotSlots, used for undo.
+ * Returns the previous deletedAt values so a restore can be exact.
+ */
+export async function snapshotDeletedAt(ids: string[]): Promise<Map<string, number | null | undefined>> {
+  const map = new Map<string, number | null | undefined>();
+  for (const id of ids) {
+    const it = await db.items.get(id);
+    if (it) map.set(id, it.deletedAt);
+  }
+  return map;
+}
+
+export async function restoreItem(id: string): Promise<void> {
+  await db.items.update(id, { deletedAt: null });
+}
+
+export async function restoreItems(ids: string[]): Promise<void> {
+  await db.transaction('rw', db.items, async () => {
+    for (const id of ids) {
+      await db.items.update(id, { deletedAt: null });
+    }
+  });
+}
+
+/**
+ * Hard delete: drop the item row and strip it from any saved outfits.
+ * Outfits left empty are removed. This is the "empty trash" action —
+ * it's irreversible.
+ */
+export async function purgeItem(id: string): Promise<{ outfitsAffected: number; outfitsRemoved: number }> {
   let outfitsAffected = 0;
   let outfitsRemoved = 0;
   await db.transaction('rw', db.items, db.savedOutfits, async () => {
@@ -113,6 +176,16 @@ export async function deleteItem(id: string): Promise<{ outfitsAffected: number;
     await db.items.delete(id);
   });
   return { outfitsAffected, outfitsRemoved };
+}
+
+export async function purgeAllDeleted(): Promise<{ count: number; outfitsRemoved: number }> {
+  const trashed = await db.items.filter((it) => !!it.deletedAt).toArray();
+  let outfitsRemoved = 0;
+  for (const item of trashed) {
+    const r = await purgeItem(item.id);
+    outfitsRemoved += r.outfitsRemoved;
+  }
+  return { count: trashed.length, outfitsRemoved };
 }
 
 /** Count saved outfits that reference an item — for confirmation dialogs. */

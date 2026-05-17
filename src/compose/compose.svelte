@@ -37,8 +37,12 @@
   }
 
   // Library: live-subscribe so the generator always has fresh data.
+  // Filter soft-deleted items so the generator doesn't propose outfits
+  // with garments that are sitting in the trash.
   $effect(() => {
-    const obs = liveQuery(() => db.items.orderBy('createdAt').reverse().toArray());
+    const obs = liveQuery(() =>
+      db.items.orderBy('createdAt').reverse().filter((it) => !it.deletedAt).toArray(),
+    );
     const sub = obs.subscribe({
       next: (v) => {
         composeState.library = v;

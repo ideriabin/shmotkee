@@ -24,9 +24,13 @@
 
   $effect(() => {
     // Unclassified items can't be locked because the generator can't place
-    // them; filter them out at source.
+    // them; soft-deleted items aren't lockable either. Filter both at source.
     const obs = liveQuery(() =>
-      db.items.orderBy('createdAt').filter((it) => it.slot !== null).reverse().toArray(),
+      db.items
+        .orderBy('createdAt')
+        .filter((it) => it.slot !== null && !it.deletedAt)
+        .reverse()
+        .toArray(),
     );
     const sub = obs.subscribe({ next: (v) => (items = v) });
     return () => sub.unsubscribe();

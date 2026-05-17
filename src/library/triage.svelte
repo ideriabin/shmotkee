@@ -26,8 +26,10 @@
 
   $effect(() => {
     (async () => {
-      const all = await db.items.where('slot').equals(null as any).toArray()
-        .catch(async () => db.items.filter((it) => it.slot === null).toArray());
+      // Active + unclassified items only — trashed items aren't part of triage.
+      const all = await db.items
+        .filter((it) => it.slot === null && !it.deletedAt)
+        .toArray();
       // Newest first feels more natural — she just uploaded these.
       queue = [...all].sort((a, b) => b.createdAt - a.createdAt);
       initialTotal = queue.length;
@@ -40,7 +42,9 @@
   // Live count for the header — drops as she classifies.
   let unclassifiedTotal = $state(0);
   $effect(() => {
-    const obs = liveQuery(() => db.items.filter((it) => it.slot === null).count());
+    const obs = liveQuery(() =>
+      db.items.filter((it) => it.slot === null && !it.deletedAt).count(),
+    );
     const sub = obs.subscribe({ next: (n) => (unclassifiedTotal = n) });
     return () => sub.unsubscribe();
   });

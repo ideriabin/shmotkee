@@ -2,7 +2,7 @@
   import { X, Trash2, Minus, Plus } from 'lucide-svelte';
   import type { Item } from '../shared/types';
   import { SLOT_KEYS, SLOT_LABEL_RU, type SlotKey } from '../shared/slots';
-  import { updateItem, deleteItem, countOutfitsUsing } from '../db/items';
+  import { updateItem, softDeleteItem, countOutfitsUsing } from '../db/items';
   import Thumb from './thumb.svelte';
 
   let { item, onClose }: { item: Item; onClose: () => void } = $props();
@@ -56,7 +56,10 @@
   }
 
   async function doDelete() {
-    await deleteItem(item.id);
+    // Soft delete: item moves to trash. Saved outfits keep referencing it
+    // so the user can recover the look later. Purge happens from the trash
+    // view when the user is sure.
+    await softDeleteItem(item.id);
     requestClose();
   }
 </script>

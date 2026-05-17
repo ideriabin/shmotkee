@@ -9,17 +9,20 @@
     type SlotKey,
   } from '../shared/slots';
   import { plural, OUTFITS, ITEMS } from '../shared/ru-plural';
-  import { updateItemSlots, snapshotSlots, restoreItemSlots, deleteItem } from '../db/items';
+  import { updateItemSlots, snapshotSlots, restoreItemSlots, softDeleteItems } from '../db/items';
   import Thumb from './thumb.svelte';
   import UploadSheet from './upload-sheet.svelte';
   import ItemDetail from './item-detail.svelte';
   import Triage from './triage.svelte';
+  import Trash from './trash.svelte';
 
   type Filter = 'all' | 'unclassified' | SlotKey;
 
   let filter = $state<Filter>('all');
   let items = $state<Item[]>([]);
+  let trashCount = $state(0);
   let showUpload = $state(false);
+  let showTrash = $state(false);
   let detailItem = $state<Item | null>(null);
   let triageOpen = $state(false);
 
@@ -44,12 +47,21 @@
   let showDeleteConfirm = $state(false);
 
   $effect(() => {
-    const obs = liveQuery(() => db.items.orderBy('createdAt').reverse().toArray());
+    // Active items only — soft-deleted ones live in the trash.
+    const obs = liveQuery(() =>
+      db.items.orderBy('createdAt').reverse().filter((it) => !it.deletedAt).toArray(),
+    );
     const sub = obs.subscribe({
       next: (v) => {
         items = v;
       },
     });
+    return () => sub.unsubscribe();
+  });
+
+  $effect(() => {
+    const obs = liveQuery(() => db.items.filter((it) => !!it.deletedAt).count());
+    const sub = obs.subscribe({ next: (v) => (trashCount = v) });
     return () => sub.unsubscribe();
   });
 
@@ -173,9 +185,9 @@
   async function batchDelete() {
     if (selectedIds.size === 0) return;
     const ids = [...selectedIds];
-    // Cascading deletes also drop the items from saved outfits — those
-    // can't be undone via the toast.
-    for (const id of ids) await deleteItem(id);
+    // Soft delete: items move to trash. User can restore from there if
+    // they tapped the wrong tile. Saved outfits keep referencing them.
+    await softDeleteItems(ids);
     showDeleteConfirm = false;
     confirmDeleteCount = 0;
     clearSelection();
@@ -255,6 +267,17 @@
           <span class="title-strong">Гардероб</span>
           <span class="title-count">{items.length}</span>
         </h1>
+        {#if trashCount > 0}
+          <button
+            class="title-icon-btn trash-entry"
+            type="button"
+            aria-label="Корзина"
+            onclick={() => (showTrash = true)}
+          >
+            <Trash2 size={20} strokeWidth={1.6} aria-hidden="true" />
+            <span class="trash-count">{trashCount}</span>
+          </button>
+        {/if}
       {/if}
     </div>
   </header>
@@ -420,6 +443,10 @@
     <Triage onClose={() => (triageOpen = false)} />
   {/if}
 
+  {#if showTrash}
+    <Trash onClose={() => (showTrash = false)} />
+  {/if}
+
   {#if showDeleteConfirm}
     <div
       class="action-overlay"
@@ -513,6 +540,28 @@
   .title-icon-btn:hover, .title-icon-btn:active {
     color: var(--text);
     background: var(--surface);
+  }
+  /* Trash entry: small badge with count below the icon. The whole pill is
+     the trash icon-button; the count tucks into a sub-grid so the icon
+     still centers and the badge reads as a quantitative hint. */
+  .trash-entry {
+    position: relative;
+  }
+  .trash-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-on);
+    font-size: 11px;
+    font-weight: var(--w-semibold);
+    line-height: 18px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ─── unified chip strip ─── horizontal scrolling, single line.

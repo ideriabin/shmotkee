@@ -24,7 +24,9 @@ export type ReprocessProgress = {
 export async function* reprocessAllItems(
   trimOpts?: TrimOptions,
 ): AsyncGenerator<ReprocessProgress> {
-  const all = await db.items.toArray();
+  // Skip trashed items — they're heading for purge anyway, no point
+  // burning decode/encode cycles re-trimming them.
+  const all = await db.items.filter((it) => !it.deletedAt).toArray();
   let done = 0;
   let failed = 0;
   let changed = 0;

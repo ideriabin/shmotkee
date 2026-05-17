@@ -13,6 +13,14 @@ export type Item = {
   blob: Blob;
   thumbnail: Blob;
   createdAt: number;
+  /**
+   * Soft-delete timestamp. When set, the item is hidden from the active
+   * library / generator / pickers but remains in IndexedDB so that:
+   *  (a) saved outfits referencing it still render normally,
+   *  (b) the user can restore it from the trash view.
+   * `null` or `undefined` means "active". A real number means "in trash."
+   */
+  deletedAt?: number | null;
 };
 
 export type Session = {

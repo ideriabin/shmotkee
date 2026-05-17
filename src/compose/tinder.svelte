@@ -131,22 +131,28 @@
             <Preview combo={next1} accent />
           </div>
         {/if}
-        <div
-          class="card card-active"
-          class:dragging
-          class:leaving-left={leaving === 'left'}
-          class:leaving-right={leaving === 'right'}
-          class:entering
-          style:transform={dragging
-            ? `translateX(${dragX}px) rotate(${angle}deg)`
-            : ''}
-        >
-          <Preview combo={current} accent />
-          <div class="tint nope" style:opacity={Math.max(0, -tint)}></div>
-          <div class="tint yes" style:opacity={Math.max(0, tint)}></div>
-          <div class="badge nope-badge" style:opacity={Math.max(0, -tint)}>хуйня</div>
-          <div class="badge yes-badge" style:opacity={Math.max(0, tint)}>заебись</div>
-        </div>
+        <!-- Key on the index so each swiped card unmounts cleanly when
+             advancing — without the key, the same DOM node is reused and
+             the leaving class is animated *back* to base, producing the
+             "card comes back" visual bug. -->
+        {#key composeState.tinderIndex}
+          <div
+            class="card card-active"
+            class:dragging
+            class:leaving-left={leaving === 'left'}
+            class:leaving-right={leaving === 'right'}
+            class:entering
+            style:transform={dragging
+              ? `translateX(${dragX}px) rotate(${angle}deg)`
+              : ''}
+          >
+            <Preview combo={current} accent />
+            <div class="tint nope" style:opacity={Math.max(0, -tint)}></div>
+            <div class="tint yes" style:opacity={Math.max(0, tint)}></div>
+            <div class="badge nope-badge" style:opacity={Math.max(0, -tint)}>хуйня</div>
+            <div class="badge yes-badge" style:opacity={Math.max(0, tint)}>заебись</div>
+          </div>
+        {/key}
       </div>
     {:else if composeState.exhausted}
       <div class="empty">
@@ -166,10 +172,22 @@
   </div>
 
   <footer class="actions">
-    <button class="action nope" type="button" disabled={!current} onclick={() => decide(false)}>
+    <button
+      class="action nope"
+      class:primed={tint < -0.1}
+      type="button"
+      disabled={!current}
+      onclick={() => decide(false)}
+    >
       <span class="display action-label">хуйня</span>
     </button>
-    <button class="action yes" type="button" disabled={!current} onclick={() => decide(true)}>
+    <button
+      class="action yes"
+      class:primed={tint > 0.1}
+      type="button"
+      disabled={!current}
+      onclick={() => decide(true)}
+    >
       <span class="display action-label">заебись</span>
     </button>
   </footer>
@@ -380,8 +398,17 @@
     background: var(--border-soft);
   }
   .action {
+    /* Grid + place-items centers the label horizontally and vertically
+       regardless of the button's intrinsic content metrics, so the label
+       sits dead-center in its half rather than wherever default button
+       alignment ends up putting it. */
+    display: grid;
+    place-items: center;
     padding: var(--space-md) var(--space-sm);
-    transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out),
+      transform var(--dur-quick) var(--ease-out);
     background: var(--bg);
     color: var(--text);
   }
@@ -405,11 +432,13 @@
     transform: scale(0.98);
     transition-duration: 60ms;
   }
-  .action.nope:active:not(:disabled) {
+  .action.nope:active:not(:disabled),
+  .action.nope.primed {
     background: var(--surface);
     color: var(--text);
   }
-  .action.yes:active:not(:disabled) {
+  .action.yes:active:not(:disabled),
+  .action.yes.primed {
     background: var(--accent);
     color: var(--accent-on);
   }
@@ -422,6 +451,13 @@
     line-height: 1;
     letter-spacing: var(--track-tight);
     text-transform: lowercase;
+    transition: transform var(--dur-quick) var(--ease-out);
+  }
+  /* Bump scale on the primed label so the swipe direction reads even
+     before the threshold trips — the user sees "the app heard me start
+     swiping right" within the first few pixels of motion. */
+  .action.primed .action-label {
+    transform: scale(1.08);
   }
 
   @keyframes pulse {

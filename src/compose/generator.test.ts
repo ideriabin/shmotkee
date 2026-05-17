@@ -26,10 +26,8 @@ function collect(opts: Parameters<typeof generate>[0], limit = 200) {
   return out;
 }
 
-describe('outfit generator — shape XOR', () => {
+describe('outfit generator', () => {
   beforeEach(() => {
-    // Seed Math.random with a deterministic LCG so combinatorial coverage
-    // doesn't flake between runs.
     let s = 1;
     vi.spyOn(Math, 'random').mockImplementation(() => {
       s = (s * 1664525 + 1013904223) >>> 0;
@@ -41,118 +39,80 @@ describe('outfit generator — shape XOR', () => {
     vi.restoreAllMocks();
   });
 
-  it('never emits a combination with both full_body and top/bottom', () => {
+  it('produces unique combinations and exhausts cleanly', () => {
     const library: Item[] = [
       makeItem('top-1', 'top'),
       makeItem('top-2', 'top'),
       makeItem('bottom-1', 'bottom'),
-      makeItem('bottom-2', 'bottom'),
-      makeItem('dress-1', 'full_body'),
-      makeItem('dress-2', 'full_body'),
       makeItem('shoes-1', 'shoes'),
     ];
+    const seen = new Set<string>();
     const results = collect({
       library,
       locked: [],
-      slotRanges: DEFAULT_SLOT_RANGES,
-      seenKeys: new Set(),
+      slotRanges: { ...DEFAULT_SLOT_RANGES, bottom: { min: 1, max: 1 } },
+      seenKeys: seen,
     });
-
     expect(results.length).toBeGreaterThan(0);
-    for (const c of results) {
-      const hasOnePiece = c.bySlot.full_body.length > 0;
-      const hasSeparates = c.bySlot.top.length > 0 || c.bySlot.bottom.length > 0;
-      expect(hasOnePiece && hasSeparates).toBe(false);
-    }
+    const keys = new Set(results.map((r) => r.key));
+    expect(keys.size).toBe(results.length);
   });
 
-  it('produces both shapes when both are available', () => {
-    const library: Item[] = [
-      makeItem('top-1', 'top'),
-      makeItem('bottom-1', 'bottom'),
-      makeItem('dress-1', 'full_body'),
-      makeItem('shoes-1', 'shoes'),
-    ];
-    const results = collect({
-      library,
-      locked: [],
-      slotRanges: DEFAULT_SLOT_RANGES,
-      seenKeys: new Set(),
-    });
-
-    const onePieceCount = results.filter((c) => c.bySlot.full_body.length > 0).length;
-    const separatesCount = results.filter(
-      (c) => c.bySlot.top.length > 0 && c.bySlot.bottom.length > 0,
-    ).length;
-    expect(onePieceCount).toBeGreaterThan(0);
-    expect(separatesCount).toBeGreaterThan(0);
-  });
-
-  it('locked full_body forces one_piece shape (no top/bottom in result)', () => {
-    const dress = makeItem('dress-1', 'full_body');
-    const library: Item[] = [
-      makeItem('top-1', 'top'),
-      makeItem('bottom-1', 'bottom'),
-      dress,
-      makeItem('shoes-1', 'shoes'),
-    ];
-    const results = collect({
-      library,
-      locked: [dress],
-      slotRanges: DEFAULT_SLOT_RANGES,
-      seenKeys: new Set(),
-    });
-
-    expect(results.length).toBeGreaterThan(0);
-    for (const c of results) {
-      expect(c.bySlot.full_body.map((i) => i.id)).toContain('dress-1');
-      expect(c.bySlot.top).toHaveLength(0);
-      expect(c.bySlot.bottom).toHaveLength(0);
-    }
-  });
-
-  it('locked top forces separates shape (no dresses in result)', () => {
+  it('honors slot ranges (locked items always present)', () => {
     const top = makeItem('top-1', 'top');
     const library: Item[] = [
       top,
+      makeItem('top-2', 'top'),
       makeItem('bottom-1', 'bottom'),
-      makeItem('dress-1', 'full_body'),
       makeItem('shoes-1', 'shoes'),
     ];
     const results = collect({
       library,
       locked: [top],
-      slotRanges: DEFAULT_SLOT_RANGES,
+      slotRanges: { ...DEFAULT_SLOT_RANGES, bottom: { min: 1, max: 1 } },
       seenKeys: new Set(),
     });
-
-    expect(results.length).toBeGreaterThan(0);
     for (const c of results) {
       expect(c.bySlot.top.map((i) => i.id)).toContain('top-1');
-      expect(c.bySlot.full_body).toHaveLength(0);
     }
   });
 
-  it('locked dress + locked top → dress wins, top is dropped', () => {
-    const dress = makeItem('dress-1', 'full_body');
-    const strayTop = makeItem('top-1', 'top');
+  it('permits dress + top + bottom in the same outfit (no XOR constraint)', () => {
     const library: Item[] = [
-      dress,
-      strayTop,
+      makeItem('top-1', 'top'),
       makeItem('bottom-1', 'bottom'),
+      makeItem('dress-1', 'full_body'),
       makeItem('shoes-1', 'shoes'),
     ];
     const results = collect({
       library,
-      locked: [dress, strayTop],
+      locked: [],
+      slotRanges: {
+        top: { min: 1, max: 1 },
+        bottom: { min: 1, max: 1 },
+        full_body: { min: 1, max: 1 },
+        outerwear: { min: 0, max: 0 },
+        shoes: { min: 1, max: 1 },
+        accessories: { min: 0, max: 0 },
+        other: { min: 0, max: 0 },
+      },
+      seenKeys: new Set(),
+    });
+    expect(results.length).toBeGreaterThan(0);
+    for (const c of results) {
+      expect(c.bySlot.top.length).toBe(1);
+      expect(c.bySlot.bottom.length).toBe(1);
+      expect(c.bySlot.full_body.length).toBe(1);
+    }
+  });
+
+  it('returns no combinations when library is empty', () => {
+    const results = collect({
+      library: [],
+      locked: [],
       slotRanges: DEFAULT_SLOT_RANGES,
       seenKeys: new Set(),
     });
-
-    expect(results.length).toBeGreaterThan(0);
-    for (const c of results) {
-      expect(c.bySlot.full_body.map((i) => i.id)).toContain('dress-1');
-      expect(c.bySlot.top).toHaveLength(0);
-    }
+    expect(results.length).toBe(0);
   });
 });
